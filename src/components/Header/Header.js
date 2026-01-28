@@ -41,11 +41,11 @@ const Header = () => {
             LGBTQ
           </Link>
           <Link 
-            to="/donate" 
-            className={`nav-link ${isActive('/donate') ? 'active' : ''}`}
+            to="/kids" 
+            className={`nav-link ${isActive('/kids') ? 'active' : ''}`}
             onClick={() => setIsMenuOpen(false)}
           >
-            Donate
+            Kids
           </Link>
           <Link 
             to="/about" 
@@ -55,11 +55,11 @@ const Header = () => {
             About
           </Link>
           <Link 
-            to="/kids" 
-            className={`nav-link ${isActive('/kids') ? 'active' : ''}`}
+            to="/donate" 
+            className={`nav-link ${isActive('/donate') ? 'active' : ''}`}
             onClick={() => setIsMenuOpen(false)}
           >
-            Kids
+            Donate
           </Link>
         </nav>
 

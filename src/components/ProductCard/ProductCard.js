@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './ProductCard.css';
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, onProductClick }) => {
   const [isFavorite, setIsFavorite] = useState(false);
 
   const handleFavoriteClick = (e) => {
@@ -10,11 +10,17 @@ const ProductCard = ({ product }) => {
     setIsFavorite(!isFavorite);
   };
 
+  const handleCardClick = () => {
+    if (onProductClick) {
+      onProductClick(product);
+    }
+  };
+
   return (
-    <div className="product-card">
+    <div className="product-card" onClick={handleCardClick}>
       <div className="product-image-container">
         <img 
-          src={`https://api.lorem.space/image/fashion?w=400&h=400&hash=${product.id}${product.name.replace(/\s/g, '').substring(0, 10)}`}
+          src={product.image || `https://api.lorem.space/image/fashion?w=400&h=400&hash=${product.id}${product.name.replace(/\s/g, '').substring(0, 10)}`}
           alt={product.name}
           className="product-image"
           onError={(e) => {
