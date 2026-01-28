@@ -1,0 +1,131 @@
+.footer {
+  background-color: #000000;
+  border-top: 1px solid #333333;
+  padding: 60px 40px 30px;
+  margin-top: 80px;
+}
+
+.footer-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 60px;
+  margin-bottom: 40px;
+}
+
+.footer-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 24px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.footer-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer-links li a {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  color: #999999;
+  transition: color 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.footer-links li a:hover {
+  color: #ff0000;
+}
+
+.payment-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.payment-icon {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666666;
+  padding: 8px 16px;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.footer-bottom {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding-top: 40px;
+  border-top: 1px solid #333333;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer-logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.footer-logo {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+}
+
+.footer-bottom p {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  color: #666666;
+}
+
+.footer-tagline {
+  font-family: 'Didot', serif;
+  font-size: 16px;
+  font-style: italic;
+  color: #999999;
+  letter-spacing: 2px;
+}
+
+@media (max-width: 968px) {
+  .footer-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 40px 20px 20px;
+  }
+
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .payment-methods {
+    justify-content: flex-start;
+  }
+}
+

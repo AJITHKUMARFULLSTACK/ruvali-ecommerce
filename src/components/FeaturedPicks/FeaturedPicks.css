@@ -1,0 +1,71 @@
+.featured-picks {
+  padding: 80px 40px;
+  background-color: #000000;
+}
+
+.featured-picks-container {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.featured-picks-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 36px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 40px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.featured-picks-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.shop-now-btn {
+  display: block;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 16px 48px;
+  background-color: #ff0000;
+  color: #ffffff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-radius: 4px;
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+.shop-now-btn:hover {
+  background-color: #cc0000;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .featured-picks {
+    padding: 60px 20px;
+  }
+
+  .featured-picks-title {
+    font-size: 28px;
+    margin-bottom: 30px;
+  }
+
+  .featured-picks-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  .shop-now-btn {
+    padding: 14px 36px;
+    font-size: 14px;
+  }
+}
+

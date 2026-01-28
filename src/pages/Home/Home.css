@@ -1,0 +1,47 @@
+.home {
+  width: 100%;
+}
+
+.curated-section {
+  max-width: 1440px;
+  margin: 80px auto;
+  padding: 0 40px;
+  text-align: center;
+}
+
+.section-title {
+  font-family: 'Didot', serif;
+  font-size: 48px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 20px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.section-description {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 300;
+  color: #999999;
+  line-height: 1.8;
+  max-width: 800px;
+  margin: 0 auto;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 768px) {
+  .curated-section {
+    margin: 60px auto;
+    padding: 0 20px;
+  }
+
+  .section-title {
+    font-size: 32px;
+  }
+
+  .section-description {
+    font-size: 16px;
+  }
+}
+

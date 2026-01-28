@@ -1,0 +1,141 @@
+.product-card {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(255, 0, 0, 0.2);
+}
+
+.product-image-container {
+  position: relative;
+  width: 100%;
+  padding-top: 100%;
+  background-color: #2a2a2a;
+  overflow: hidden;
+}
+
+.product-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-image-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: 
+    repeating-linear-gradient(45deg, #2a2a2a, #2a2a2a 10px, #333333 10px, #333333 20px);
+  color: #666666;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.favorite-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  z-index: 10;
+}
+
+.favorite-btn:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.favorite-btn.active svg path {
+  fill: #ff0000;
+  stroke: #ff0000;
+}
+
+.product-info {
+  padding: 16px;
+}
+
+.product-price {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.product-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #ffffff;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.product-category {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  color: #999999;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.product-colors {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #333333;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.color-dot:hover {
+  transform: scale(1.2);
+}
+
+@media (max-width: 768px) {
+  .product-info {
+    padding: 12px;
+  }
+
+  .product-price {
+    font-size: 16px;
+  }
+
+  .product-name {
+    font-size: 14px;
+  }
+
+  .product-category {
+    font-size: 12px;
+  }
+}
+
