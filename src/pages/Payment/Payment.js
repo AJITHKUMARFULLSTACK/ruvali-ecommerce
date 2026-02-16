@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import { useStore } from '../../context/StoreContext';
 import './Payment.css';
 
 const Payment = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { orderDetails, saveOrderDetails } = useCart();
+  const { backendUrl, storeSlug } = useStore();
   const [orderData, setOrderData] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [cardDetails, setCardDetails] = useState({
@@ -35,8 +37,9 @@ const Payment = () => {
     }
   };
 
-  const handlePayment = (e) => {
+  const handlePayment = async (e) => {
     e.preventDefault();
+
     const paymentData = {
       ...orderData,
       paymentMethod,
@@ -44,6 +47,39 @@ const Payment = () => {
       paymentId: `PAY-${Date.now()}`,
       cardDetails: paymentMethod === 'card' ? cardDetails : null,
     };
+
+    // Create order in backend so it appears in Admin
+    try {
+      const response = await fetch(
+        `${backendUrl}/api/orders?storeSlug=${encodeURIComponent(storeSlug)}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            customer: {
+              name: paymentData.shippingAddress?.fullName || 'Customer',
+              phone: paymentData.shippingAddress?.phone || '',
+            },
+            items: [
+              {
+                productId: paymentData.product?.id,
+                quantity: paymentData.quantity || 1,
+              },
+            ],
+            shippingInfo: paymentData.shippingAddress,
+          }),
+        }
+      );
+
+      const createdOrder = await response.json();
+      console.log('[Payment] backend order created', createdOrder);
+      paymentData.backendOrder = createdOrder;
+    } catch (err) {
+      console.error('[Payment] failed to create backend order', err);
+    }
+
     saveOrderDetails(paymentData);
     navigate('/order-confirmation', { state: { orderData: paymentData } });
   };

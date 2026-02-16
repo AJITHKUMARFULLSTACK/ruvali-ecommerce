@@ -1,20 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Hero from '../../components/Hero/Hero';
 import ProductCard from '../../components/ProductCard/ProductCard';
 import ProductDetail from '../../components/ProductDetail/ProductDetail';
 import CheckoutModal from '../../components/CheckoutModal/CheckoutModal';
 import landingBg from '../../Assets/Images/LandingBg.png';
 import commonBg from '../../Assets/Images/CommonBg.png';
-import kids0 from '../../Assets/Images/kids0.jpg';
-import kids1 from '../../Assets/Images/kids1.jpg';
-import kids2 from '../../Assets/Images/kids2.jpg';
-import kids3 from '../../Assets/Images/kids3.jpg';
-import kids4 from '../../Assets/Images/kids4.jpg';
-import kids5 from '../../Assets/Images/kids5.jpg';
-import kids6 from '../../Assets/Images/kids6.jpg';
+import { useStore } from '../../context/StoreContext';
 import './KidsCollection.css';
 
 const KidsCollection = () => {
+  const { backendUrl, storeSlug } = useStore();
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -30,69 +25,33 @@ const KidsCollection = () => {
     'ACCESSORIES'
   ];
 
-  // Sample products - in a real app, this would come from an API
-  const allProducts = [
-    {
-      id: 1,
-      name: 'RUVALI KIDS PLAY',
-      category: 'DRUNKEN MONK PICKS',
-      price: 1999.00,
-      image: kids0,
-      colors: ['#ff0000', '#00ff00', '#0000ff', '#ffa500', '#800080', '#8b4513']
-    },
-    {
-      id: 2,
-      name: 'RUVALI KIDS FUN',
-      category: 'TRIPPERS PICKS',
-      price: 2199.00,
-      image: kids1,
-      colors: ['#ff0000', '#00ff00', '#0000ff']
-    },
-    {
-      id: 3,
-      name: 'RUVALI KIDS ADVENTURE',
-      category: 'NIGHT LIGHT PICKS',
-      price: 1899.00,
-      image: kids2,
-      colors: ['#000000', '#ffffff', '#333333']
-    },
-    {
-      id: 4,
-      name: 'RUVALI KIDS TRIPPER',
-      category: 'TRIPPERS PICKS',
-      price: 2099.00,
-      image: kids3,
-      colors: ['#ff00ff', '#00ffff', '#ffff00']
-    },
-    {
-      id: 5,
-      name: 'RUVALI KIDS RAVE',
-      category: 'RADE RAVE PICKS',
-      price: 2199.00,
-      image: kids4,
-      colors: ['#ff0000', '#00ff00', '#0000ff', '#ffa500']
-    },
-    {
-      id: 6,
-      name: 'RUVALI KIDS CLASSIC',
-      category: 'DRUNKEN MONK PICKS',
-      price: 1799.00,
-      image: kids5,
-      colors: ['#8b4513', '#000000', '#ffffff']
-    },
-    {
-      id: 7,
-      name: 'RUVALI KIDS STYLE',
-      category: 'NIGHT LIGHT PICKS',
-      price: 1999.00,
-      image: kids6,
-      colors: ['#ff69b4', '#00ffff', '#ffff00']
-    }
-  ];
+  const [allProducts, setAllProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch(
+          `${backendUrl}/api/products?storeSlug=${encodeURIComponent(storeSlug)}`
+        );
+        const data = await res.json();
+        console.log('[KidsCollection] products', data);
+        if (Array.isArray(data)) {
+          setAllProducts(data);
+        }
+      } catch (err) {
+        console.error('[KidsCollection] failed to fetch products', err);
+      }
+    };
+
+    fetchProducts();
+  }, [backendUrl, storeSlug]);
 
   const filteredProducts = selectedCategory === 'ALL' 
     ? allProducts 
-    : allProducts.filter(product => product.category === selectedCategory);
+    : allProducts.filter((product) => {
+        const catName = product.category?.name || '';
+        return catName.toUpperCase() === selectedCategory.toUpperCase();
+      });
 
   return (
     <div className="kids-collection">

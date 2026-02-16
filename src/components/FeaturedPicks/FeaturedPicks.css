@@ -1,6 +1,6 @@
 .featured-picks {
   padding: 80px 40px;
-  background-color: #000000;
+  background-color: #ffffff;
 }
 
 .featured-picks-container {
@@ -12,7 +12,7 @@
   font-family: 'Outfit', sans-serif;
   font-size: 36px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text);
   margin-bottom: 40px;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -31,7 +31,7 @@
   width: fit-content;
   margin: 0 auto;
   padding: 16px 48px;
-  background-color: #ff0000;
+  background-color: var(--primary);
   color: #ffffff;
   font-family: 'Outfit', sans-serif;
   font-size: 16px;
@@ -43,7 +43,7 @@
 }
 
 .shop-now-btn:hover {
-  background-color: #cc0000;
+  background-color: var(--primary-hover);
   transform: translateY(-2px);
 }
 

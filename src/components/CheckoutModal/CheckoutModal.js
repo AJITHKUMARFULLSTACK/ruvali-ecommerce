@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import { resolveImageUrl } from '../../lib/imageUtils';
 import './CheckoutModal.css';
 
 const CheckoutModal = ({ isOpen, onClose, product, quantity, selectedColor }) => {
@@ -34,7 +35,9 @@ const CheckoutModal = ({ isOpen, onClose, product, quantity, selectedColor }) =>
       quantity: quantity,
       selectedColor: selectedColor,
       shippingAddress: formData,
-      totalAmount: product.price * quantity,
+      totalAmount: (typeof product.price === 'number'
+        ? product.price
+        : Number(product.price || 0)) * quantity,
       orderDate: new Date().toISOString(),
     };
     saveOrderDetails(orderData);
@@ -42,6 +45,14 @@ const CheckoutModal = ({ isOpen, onClose, product, quantity, selectedColor }) =>
     onClose();
     navigate('/payment', { state: { orderData } });
   };
+
+  const priceNumber =
+    typeof product?.price === 'number' ? product.price : Number(product?.price || 0);
+
+  const rawImage =
+    product?.image ||
+    (Array.isArray(product?.images) && product.images.length > 0 ? product.images[0] : null);
+  const imageUrl = rawImage ? resolveImageUrl(rawImage) : null;
 
   return (
     <div className="checkout-modal-overlay" onClick={onClose}>
@@ -51,11 +62,13 @@ const CheckoutModal = ({ isOpen, onClose, product, quantity, selectedColor }) =>
         <h2 className="checkout-title">Shipping Details</h2>
         
         <div className="checkout-product-summary">
-          <img src={product?.image} alt={product?.name} className="checkout-product-image" />
+          {imageUrl && (
+            <img src={imageUrl} alt={product?.name} className="checkout-product-image" />
+          )}
           <div>
             <h3>{product?.name}</h3>
             <p>Quantity: {quantity}</p>
-            <p>Total: ₹{(product?.price * quantity).toLocaleString('en-IN')}</p>
+            <p>Total: ₹{(priceNumber * quantity).toLocaleString('en-IN')}</p>
           </div>
         </div>
 

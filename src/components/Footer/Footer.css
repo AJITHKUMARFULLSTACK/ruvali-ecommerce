@@ -1,6 +1,6 @@
 .footer {
-  background-color: #000000;
-  border-top: 1px solid #333333;
+  background-color: #ffffff;
+  border-top: 1px solid #e0e0e0;
   padding: 60px 40px 30px;
   margin-top: 80px;
 }
@@ -23,7 +23,7 @@
   font-family: 'Outfit', sans-serif;
   font-size: 16px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text);
   margin-bottom: 24px;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -40,14 +40,14 @@
   font-family: 'Outfit', sans-serif;
   font-size: 14px;
   font-weight: 300;
-  color: #999999;
+  color: #555555;
   transition: color 0.3s;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .footer-links li a:hover {
-  color: #ff0000;
+  color: var(--primary);
 }
 
 .payment-methods {
@@ -62,7 +62,7 @@
   font-weight: 500;
   color: #666666;
   padding: 8px 16px;
-  border: 1px solid #333333;
+  border: 1px solid #ddd;
   border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -72,7 +72,7 @@
   max-width: 1440px;
   margin: 0 auto;
   padding-top: 40px;
-  border-top: 1px solid #333333;
+  border-top: 1px solid #e0e0e0;
   text-align: center;
   display: flex;
   flex-direction: column;

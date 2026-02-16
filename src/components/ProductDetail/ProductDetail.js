@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCart } from '../../context/CartContext';
+import { resolveImageUrl } from '../../lib/imageUtils';
 import './ProductDetail.css';
 
 const ProductDetail = ({ product, isOpen, onClose, onBuyNow }) => {
@@ -22,6 +23,21 @@ const ProductDetail = ({ product, isOpen, onClose, onBuyNow }) => {
     setQuantity((prev) => Math.max(1, prev + delta));
   };
 
+  const rawImage =
+    product.image ||
+    (Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : null);
+  const imageUrl = rawImage
+    ? resolveImageUrl(rawImage)
+    : `https://api.lorem.space/image/fashion?w=600&h=600&hash=${product.id}`;
+
+  const categoryLabel =
+    typeof product.category === 'string'
+      ? product.category
+      : product.category?.name || '';
+
+  const priceNumber =
+    typeof product.price === 'number' ? product.price : Number(product.price || 0);
+
   return (
     <div className="product-detail-overlay" onClick={onClose}>
       <div className="product-detail-modal" onClick={(e) => e.stopPropagation()}>
@@ -30,7 +46,7 @@ const ProductDetail = ({ product, isOpen, onClose, onBuyNow }) => {
         <div className="product-detail-content">
           <div className="product-detail-image-section">
             <img 
-              src={product.image || `https://api.lorem.space/image/fashion?w=600&h=600&hash=${product.id}`}
+              src={imageUrl}
               alt={product.name}
               className="product-detail-image"
             />
@@ -38,8 +54,12 @@ const ProductDetail = ({ product, isOpen, onClose, onBuyNow }) => {
 
           <div className="product-detail-info">
             <h2 className="product-detail-name">{product.name}</h2>
-            <p className="product-detail-category">{product.category}</p>
-            <div className="product-detail-price">₹{product.price.toLocaleString('en-IN')}</div>
+            {categoryLabel && (
+              <p className="product-detail-category">{categoryLabel}</p>
+            )}
+            <div className="product-detail-price">
+              ₹{priceNumber.toLocaleString('en-IN')}
+            </div>
 
             {product.colors && product.colors.length > 0 && (
               <div className="product-detail-colors">

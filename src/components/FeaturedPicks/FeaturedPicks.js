@@ -1,56 +1,44 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '../ProductCard/ProductCard';
 import ProductDetail from '../ProductDetail/ProductDetail';
 import CheckoutModal from '../CheckoutModal/CheckoutModal';
-import men1 from '../../Assets/Images/men1.jpg';
-import men2 from '../../Assets/Images/men2.jpg';
-import women1 from '../../Assets/Images/women1.jpg';
-import women2 from '../../Assets/Images/women2.jpg';
-import kids0 from '../../Assets/Images/kids0.jpg';
-import kids1 from '../../Assets/Images/kids1.jpg';
 import './FeaturedPicks.css';
+import { useStore } from '../../context/StoreContext';
 
 const FeaturedPicks = ({ title, category = 'men', onProductClick }) => {
+  const { storeSlug, backendUrl } = useStore();
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutData, setCheckoutData] = useState(null);
 
-  // Sample products with images based on category
-  const getSampleProducts = () => {
-    const baseProducts = [
-      {
-        id: 1,
-        name: 'RUVALI HEADS ON',
-        category: 'DRUNKEN MONK PICKS',
-        price: 2999.00,
-        colors: ['#ff0000', '#00ff00', '#0000ff', '#ffa500', '#800080', '#8b4513']
-      },
-      {
-        id: 2,
-        name: 'RUVALI STYLE UP',
-        category: 'DRUNKEN MONK PICKS',
-        price: 3499.00,
-        colors: ['#ff0000', '#00ff00', '#0000ff']
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        console.log('[FeaturedPicks] Store slug', storeSlug);
+        const res = await fetch(
+          `${backendUrl}/api/products?storeSlug=${encodeURIComponent(storeSlug)}`
+        );
+        const data = await res.json();
+        console.log('[FeaturedPicks] Products response', data);
+
+        if (!Array.isArray(data)) return;
+
+        // For now, just show all products; category-specific filtering can be added later.
+        if (data.length === 0) {
+          console.warn('[FeaturedPicks] No products returned for store', storeSlug);
+        }
+
+        setProducts(data.slice(0, 4));
+      } catch (err) {
+        console.error('[FeaturedPicks] failed to fetch products', err);
       }
-    ];
+    };
 
-    // Add images based on category
-    if (category === 'men') {
-      baseProducts[0].image = men1;
-      baseProducts[1].image = men2;
-    } else if (category === 'women' || category === 'lgbtq') {
-      baseProducts[0].image = women1;
-      baseProducts[1].image = women2;
-    } else if (category === 'kids') {
-      baseProducts[0].image = kids0;
-      baseProducts[1].image = kids1;
-    }
-
-    return baseProducts;
-  };
-
-  const sampleProducts = getSampleProducts();
+    fetchFeatured();
+  }, [backendUrl, storeSlug, title]);
 
   const handleProductClick = (product) => {
     if (onProductClick) {
@@ -66,7 +54,7 @@ const FeaturedPicks = ({ title, category = 'men', onProductClick }) => {
         <div className="featured-picks-container">
           <h2 className="featured-picks-title">{title}</h2>
           <div className="featured-picks-grid">
-            {sampleProducts.map((product) => (
+            {products.map((product) => (
               <ProductCard 
                 key={product.id} 
                 product={product}

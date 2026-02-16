@@ -13,7 +13,7 @@
   font-family: 'Didot', serif;
   font-size: 48px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text);
   margin-bottom: 20px;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -23,7 +23,7 @@
   font-family: 'Outfit', sans-serif;
   font-size: 18px;
   font-weight: 300;
-  color: #999999;
+  color: #666666;
   line-height: 1.8;
   max-width: 800px;
   margin: 0 auto;

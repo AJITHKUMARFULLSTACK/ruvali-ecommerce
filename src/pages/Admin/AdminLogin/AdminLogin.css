@@ -1,0 +1,114 @@
+.admin-login {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.admin-login-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+.admin-login-card {
+  background-color: #f8f8f8;
+  border-radius: 16px;
+  padding: 40px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.admin-login-title {
+  font-family: 'Didot', serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a1a;
+  text-align: center;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.admin-login-subtitle {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  color: #666666;
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.admin-login-error {
+  background-color: rgba(255, 0, 0, 0.1);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+}
+
+.admin-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #cccccc;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.form-group input {
+  padding: 12px 16px;
+  background-color: #f0f0f0;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  color: #ffffff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  border-color: var(--primary);
+}
+
+.admin-login-btn {
+  margin-top: 10px;
+  padding: 14px 32px;
+  background-color: var(--primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.admin-login-btn:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+.admin-login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

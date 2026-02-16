@@ -1,6 +1,6 @@
 .contact-page {
   min-height: 100vh;
-  background-color: #000000;
+  background-color: #ffffff;
   display: flex;
   align-items: center;
 }
@@ -82,7 +82,7 @@
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  color: #ff0000;
+  color: var(--primary);
 }
 
 .contact-info-text {
@@ -133,7 +133,7 @@
 
 .form-field input:focus,
 .form-field textarea:focus {
-  border-color: #ff0000;
+  border-color: var(--primary);
   box-shadow: 0 0 0 1px rgba(255, 0, 0, 0.3);
 }
 
@@ -141,7 +141,7 @@
   margin-top: 8px;
   padding: 16px 32px;
   border-radius: 999px;
-  background-color: #ff0000;
+  background-color: var(--primary);
   color: #ffffff;
   border: none;
   font-family: 'Outfit', sans-serif;
@@ -156,7 +156,7 @@
 }
 
 .submit-button:hover {
-  background-color: #cc0000;
+  background-color: var(--primary-hover);
   transform: translateY(-1px);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
 }

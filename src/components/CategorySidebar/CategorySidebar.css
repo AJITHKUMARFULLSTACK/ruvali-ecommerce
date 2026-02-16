@@ -1,0 +1,120 @@
+.category-sidebar {
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+}
+
+.category-sidebar-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 30px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.category-sidebar-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.category-sidebar-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.category-sidebar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-sidebar-expand {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.category-sidebar-expand:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.category-sidebar-spacer {
+  width: 24px;
+  flex-shrink: 0;
+}
+
+.category-sidebar-link {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #555555;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: color 0.3s;
+  text-decoration: none;
+}
+
+.category-sidebar-link:hover {
+  color: var(--primary);
+}
+
+.category-sidebar-link.active {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.category-sidebar-children {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 968px) {
+  .category-sidebar {
+    position: relative;
+    top: 0;
+  }
+
+  .category-sidebar-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .category-sidebar-row {
+    padding-left: 0 !important;
+  }
+
+  .category-sidebar-link {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+
+  .category-sidebar-link.active {
+    border-color: var(--primary);
+    background-color: rgba(255, 0, 0, 0.1);
+  }
+
+  .category-sidebar-expand,
+  .category-sidebar-spacer {
+    display: none;
+  }
+
+  .category-sidebar-children {
+    display: none;
+  }
+}

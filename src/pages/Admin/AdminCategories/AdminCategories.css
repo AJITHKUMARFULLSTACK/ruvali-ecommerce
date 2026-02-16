@@ -1,0 +1,158 @@
+.admin-categories h1 {
+  font-family: 'Didot', serif;
+  font-size: 36px;
+  color: #ffffff;
+  margin-bottom: 24px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.admin-categories-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.admin-cat-add-btn {
+  padding: 12px 24px;
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.admin-cat-add-btn:hover {
+  opacity: 0.9;
+}
+
+.admin-categories-error {
+  padding: 12px 16px;
+  background: rgba(255, 0, 0, 0.2);
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  color: #ff6666;
+  margin-bottom: 16px;
+}
+
+.admin-categories-new-form {
+  background-color: #f0f0f0;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.admin-categories-new-form h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  color: #fff;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.admin-cat-form-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-cat-input {
+  flex: 1;
+  min-width: 180px;
+  padding: 10px 16px;
+  background: #f5f5f5;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+}
+
+.admin-cat-select {
+  min-width: 200px;
+  padding: 10px 16px;
+  background: #f5f5f5;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+}
+
+.admin-categories-tree {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-cat-item {
+  margin-bottom: 8px;
+}
+
+.admin-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: #f0f0f0;
+  border: 1px solid #333;
+  border-radius: 8px;
+}
+
+.admin-cat-name {
+  flex: 1;
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  color: #fff;
+}
+
+.admin-cat-btn {
+  padding: 8px 16px;
+  background: #f5f5f5;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.admin-cat-btn:hover {
+  background: #333;
+}
+
+.admin-cat-btn.save {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.admin-cat-btn.delete {
+  color: #ff6666;
+}
+
+.admin-cat-btn.delete:hover {
+  background: rgba(255, 0, 0, 0.2);
+}
+
+.admin-cat-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-cat-children {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+}
+
+.admin-categories-loading,
+.admin-categories-empty {
+  color: #888;
+  font-family: 'Outfit', sans-serif;
+  padding: 24px;
+}

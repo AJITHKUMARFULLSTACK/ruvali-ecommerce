@@ -1,6 +1,6 @@
 .lgbtq-collection {
   min-height: 100vh;
-  background-color: #000000;
+  background-color: #ffffff;
 }
 
 .collection-container {
@@ -13,7 +13,7 @@
 }
 
 .category-sidebar {
-  background-color: #111111;
+  background-color: #f8f8f8;
   padding: 30px 20px;
   border-radius: 8px;
   height: fit-content;
@@ -59,12 +59,12 @@
 
 .category-item:hover {
   color: #ffffff;
-  background-color: #1a1a1a;
+  background-color: #f0f0f0;
 }
 
 .category-item.active {
-  color: #ff0000;
-  background-color: #1a1a1a;
+  color: var(--primary);
+  background-color: #f0f0f0;
   font-weight: 600;
 }
 

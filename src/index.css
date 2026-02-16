@@ -1,7 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Defaults – overridden by StoreThemeProvider when store loads */
+:root {
+  --primary: #ff0000;
+  --secondary: #ffffff;
+  --primary-color: #ff0000;
+  --secondary-color: #ffffff;
+  --bg: #ffffff;
+  --text: #111111;
+  --text-muted: #666666;
+  --border: rgba(0, 0, 0, 0.08);
+  --primary-hover: #cc0000;
+  --surface: #f5f5f5;
+  --surface-hover: #eeeeee;
+  --bg-image: none;
 }
 
 body {
@@ -11,8 +35,12 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #000000;
-  color: #ffffff;
+  background-color: var(--bg);
+  color: var(--text);
+  background-image: var(--bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 code {
@@ -30,4 +58,3 @@ button {
   border: none;
   font-family: inherit;
 }
-

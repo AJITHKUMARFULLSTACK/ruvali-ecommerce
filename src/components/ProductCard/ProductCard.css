@@ -1,5 +1,5 @@
 .product-card {
-  background-color: #1a1a1a;
+  background-color: #ffffff;
   border-radius: 8px;
   overflow: hidden;
   transition: transform 0.3s, box-shadow 0.3s;
@@ -15,7 +15,7 @@
   position: relative;
   width: 100%;
   padding-top: 100%;
-  background-color: #2a2a2a;
+  background-color: #f5f5f5;
   overflow: hidden;
 }
 
@@ -38,8 +38,8 @@
   align-items: center;
   justify-content: center;
   background: 
-    repeating-linear-gradient(45deg, #2a2a2a, #2a2a2a 10px, #333333 10px, #333333 20px);
-  color: #666666;
+    repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 10px, #e8e8e8 10px, #e8e8e8 20px);
+  color: #999999;
   font-size: 14px;
   font-weight: 500;
 }
@@ -48,7 +48,7 @@
   position: absolute;
   top: 12px;
   right: 12px;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(255, 255, 255, 0.9);
   border: none;
   border-radius: 50%;
   width: 40px;
@@ -62,12 +62,12 @@
 }
 
 .favorite-btn:hover {
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(255, 255, 255, 1);
 }
 
 .favorite-btn.active svg path {
-  fill: #ff0000;
-  stroke: #ff0000;
+  fill: var(--primary);
+  stroke: var(--primary);
 }
 
 .product-info {
@@ -78,7 +78,7 @@
   font-family: 'Outfit', sans-serif;
   font-size: 18px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text);
   margin-bottom: 8px;
 }
 
@@ -86,7 +86,7 @@
   font-family: 'Outfit', sans-serif;
   font-size: 16px;
   font-weight: 500;
-  color: #ffffff;
+  color: var(--text);
   margin-bottom: 4px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -96,7 +96,7 @@
   font-family: 'Outfit', sans-serif;
   font-size: 14px;
   font-weight: 300;
-  color: #999999;
+  color: #666666;
   margin-bottom: 12px;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -112,7 +112,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 2px solid #333333;
+  border: 2px solid #ddd;
   cursor: pointer;
   transition: transform 0.2s;
 }

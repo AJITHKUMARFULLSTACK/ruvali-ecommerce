@@ -7,7 +7,7 @@
 .hero-image-container {
   width: 100%;
   height: 720px;
-  background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+  background: linear-gradient(135deg, #f8f8f8 0%, #ffffff 100%);
   position: relative;
   display: flex;
   align-items: center;
@@ -45,7 +45,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.15);
   z-index: 1;
 }
 
@@ -60,7 +60,7 @@
   font-family: 'Outfit', sans-serif;
   font-size: 18px;
   font-weight: 300;
-  color: #ffffff;
+  color: var(--text);
   margin-bottom: 10px;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -70,7 +70,7 @@
   font-family: 'Didot', serif;
   font-size: 72px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text);
   letter-spacing: 4px;
   text-transform: uppercase;
 }
@@ -96,7 +96,7 @@
   font-size: 72px;
   font-weight: 700;
   letter-spacing: 4px;
-  color: #ffffff;
+  color: var(--text);
   text-transform: uppercase;
   line-height: 0.95;
 }
@@ -113,7 +113,7 @@
   bottom: 0;
   width: 80%;
   height: 2px;
-  background-color: rgba(255, 255, 255, 0.85);
+  background-color: rgba(26, 26, 26, 0.3);
   transform: translateX(-50%);
 }
 
@@ -129,7 +129,7 @@
   flex: 0 0 72px;
   width: 72px;
   height: 72px;
-  background-color: #ff0000;
+  background-color: var(--primary-color);
   border-radius: 0;
   margin-left: -80px;
 }
@@ -143,7 +143,7 @@
   font-family: 'Outfit', sans-serif;
   font-size: 16px;
   font-weight: 300;
-  color: #ffffff;
+  color: var(--text);
   margin-top: 0;
 }
 
@@ -167,9 +167,9 @@
 .hero-cta {
   padding: 12px 28px;
   border-radius: 999px;
-  border: 1px solid #ffffff;
+  border: 1px solid var(--text);
   background-color: transparent;
-  color: #ffffff;
+  color: var(--text);
   font-family: 'Outfit', sans-serif;
   font-size: 14px;
   font-weight: 500;
@@ -180,18 +180,19 @@
 }
 
 .hero-cta--primary {
-  background-color: #ff0000;
-  border-color: #ff0000;
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #ffffff;
 }
 
 .hero-cta--primary:hover {
-  background-color: #cc0000;
-  border-color: #cc0000;
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 }
 
 .hero-cta--ghost:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.06);
 }
 
 
@@ -257,7 +258,7 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--text);
   background: transparent;
   cursor: pointer;
   transition: all 0.3s;
@@ -265,12 +266,12 @@
 }
 
 .hero-slideshow-indicators .indicator.active {
-  background: #ffffff;
-  border-color: #ffffff;
+  background: var(--text);
+  border-color: var(--text);
 }
 
 .hero-slideshow-indicators .indicator:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(26, 26, 26, 0.4);
 }
 
 @media (max-width: 768px) {
