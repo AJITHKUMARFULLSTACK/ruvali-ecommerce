@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiBaseUrl } from '../../../lib/apiClient';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -19,7 +20,7 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5005/api/orders', {
+      const response = await fetch(`${apiBaseUrl}/api/orders`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
