@@ -1,8 +1,8 @@
-// Use REACT_APP_API_URL for API calls only (set in Vercel / .env.local).
-// When not set: dev uses '' (proxy to localhost:5005), prod uses same origin.
+// API base URL: REACT_APP_API_URL when set, else dev=proxy, prod=Render backend
+const PRODUCTION_API_URL = 'https://ruvali-ecommerce-1.onrender.com';
 const DEFAULT_BASE_URL =
   process.env.REACT_APP_API_URL ||
-  (process.env.NODE_ENV === 'development' ? '' : '');
+  (process.env.NODE_ENV === 'development' ? '' : PRODUCTION_API_URL);
 
 export const apiBaseUrl = DEFAULT_BASE_URL;
 
