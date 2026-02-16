@@ -1,9 +1,0 @@
-[
-  {
-    "id": 1,
-    "username": "admin",
-    "email": "admin@ruvali.com",
-    "password": "$2a$10$q0f6jOp9h7WC94Jilk/Q3.IZCBaCSDxavojL/x4H5eXCGs29Tlddi",
-    "role": "superadmin"
-  }
-]
