@@ -1,20 +1,18 @@
 import React from 'react';
-import Header, { HEADER_HEIGHT_PX } from '../Header/Header';
+import TopNav from '../TopNav/TopNav';
 import Footer from '../Footer/Footer';
 import './MainLayout.css';
 
 /**
- * Public store layout: fixed header + content + footer.
- * Uses padding-top to prevent content from jumping under the fixed header.
+ * Public store layout:
+ * - TopNav: fixed at top (24px), floating, separate layer
+ * - Children: hero (Home/Category) or content (About/Donate/Contact)
  */
 function MainLayout({ children }) {
   return (
     <>
-      <Header />
-      <main
-        className="main-content"
-        style={{ paddingTop: HEADER_HEIGHT_PX }}
-      >
+      <TopNav />
+      <main className="main-content">
         {children}
       </main>
       <Footer />

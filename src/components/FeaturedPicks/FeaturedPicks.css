@@ -1,6 +1,6 @@
 .featured-picks {
   padding: 80px 40px;
-  background-color: #ffffff;
+  background-color: var(--bg);
 }
 
 .featured-picks-container {

@@ -1,14 +1,10 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import { StoreProvider } from './context/StoreContext';
 import MainLayout from './components/MainLayout/MainLayout';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import Home from './pages/Home/Home';
-import MensCollection from './pages/MensCollection/MensCollection';
-import WomensCollection from './pages/WomensCollection/WomensCollection';
-import LGBTQCollection from './pages/LGBTQCollection/LGBTQCollection';
-import KidsCollection from './pages/KidsCollection/KidsCollection';
 import Donate from './pages/Donate/Donate';
 import About from './pages/About/About';
 import Contact from './pages/Contact/Contact';
@@ -28,18 +24,19 @@ import DebugPanel from './components/DebugPanel/DebugPanel';
 
 function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <StoreProvider>
         <CartProvider>
           <Routes>
           {/* Public Routes */}
           <Route path="/" element={<MainLayout><Home /></MainLayout>} />
           <Route path="/c" element={<MainLayout><CategoryPage /></MainLayout>} />
-          <Route path="/c/:categoryId" element={<MainLayout><CategoryPage /></MainLayout>} />
-          <Route path="/men" element={<MainLayout><MensCollection /></MainLayout>} />
-          <Route path="/women" element={<MainLayout><WomensCollection /></MainLayout>} />
-          <Route path="/lgbtq" element={<MainLayout><LGBTQCollection /></MainLayout>} />
-          <Route path="/kids" element={<MainLayout><KidsCollection /></MainLayout>} />
+          <Route path="/c/:parentSlug/:subSlug" element={<MainLayout><CategoryPage /></MainLayout>} />
+          <Route path="/c/:slug" element={<MainLayout><CategoryPage /></MainLayout>} />
+          <Route path="/men" element={<Navigate to="/c/men" replace />} />
+          <Route path="/women" element={<Navigate to="/c/women" replace />} />
+          <Route path="/kids" element={<Navigate to="/c/kids" replace />} />
+          <Route path="/lgbtq" element={<Navigate to="/c/lgbtq" replace />} />
           <Route path="/donate" element={<MainLayout><Donate /></MainLayout>} />
           <Route path="/about" element={<MainLayout><About /></MainLayout>} />
           <Route path="/contact" element={<MainLayout><Contact /></MainLayout>} />

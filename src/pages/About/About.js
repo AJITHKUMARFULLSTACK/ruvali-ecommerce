@@ -1,10 +1,11 @@
 import React from 'react';
+import { TOP_NAV_HEIGHT } from '../../components/TopNav/TopNav';
 import aboutImage from '../../Assets/Images/AboutUs.png';
 import './About.css';
 
 const About = () => {
   return (
-    <div className="about-page">
+    <div className="about-page" style={{ paddingTop: TOP_NAV_HEIGHT }}>
       <div className="about-wrapper">
         <div className="about-text-section">
           <h1 className="about-title">ABOUT US</h1>

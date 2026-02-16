@@ -1,42 +1,88 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import Hero from '../../components/Hero/Hero';
+import LuxuryHero from '../../components/LuxuryHero/LuxuryHero';
+import { TOP_NAV_HEIGHT } from '../../components/TopNav/TopNav';
 import ProductCard from '../../components/ProductCard/ProductCard';
 import ProductDetail from '../../components/ProductDetail/ProductDetail';
 import CheckoutModal from '../../components/CheckoutModal/CheckoutModal';
 import CategorySidebar from '../../components/CategorySidebar/CategorySidebar';
+import Breadcrumbs, { buildBreadcrumbItems } from '../../components/Breadcrumbs/Breadcrumbs';
 import ProductCardSkeleton from '../../components/ProductCardSkeleton/ProductCardSkeleton';
+import { useStore } from '../../context/StoreContext';
 import { useCategories } from '../../hooks/useCategories';
 import { useProducts } from '../../hooks/useProducts';
+import { resolveImageUrl } from '../../lib/imageUtils';
+import { findCategoryBySlug } from '../../lib/slugUtils';
 import './CategoryPage.css';
 
 const CategoryPage = () => {
-  const { categoryId } = useParams();
+  const { slug, parentSlug, subSlug } = useParams();
+  const effectiveSlug = parentSlug ?? slug;
+  const effectiveSubSlug = subSlug;
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutData, setCheckoutData] = useState(null);
 
-  const { data: categories = [], tree } = useCategories();
+  const { store } = useStore();
+  const { data: categories = [] } = useCategories();
+
+  const category = useMemo(() => {
+    if (!effectiveSlug) return null;
+    const parent = findCategoryBySlug(categories, effectiveSlug, null);
+    if (!parent) return null;
+    if (effectiveSubSlug) {
+      const sub = findCategoryBySlug(categories, effectiveSubSlug, parent.id);
+      return sub || parent;
+    }
+    return parent;
+  }, [categories, effectiveSlug, effectiveSubSlug]);
+
+  const categoryId = category?.id ?? null;
+
+  const parentCategory = useMemo(() => {
+    if (!category) return null;
+    if (category.parentId) {
+      return categories.find((c) => c.id === category.parentId) || null;
+    }
+    return category;
+  }, [category, categories]);
+
   const { data: products = [], isLoading, error } = useProducts(
     categoryId ? { categoryId } : {}
   );
 
-  const category = categoryId
-    ? tree.flatMap((c) => [c, ...(c.children || [])]).find((c) => c.id === categoryId)
-    : null;
-
   const categoryName = category?.name || 'All Products';
-  const title = categoryId ? `${categoryName.toUpperCase()} COLLECTION` : 'ALL PRODUCTS';
+  const title = categoryId ? `${categoryName.toUpperCase()}` : 'ALL PRODUCTS';
+  const storeBg = store?.backgroundImage ? resolveImageUrl(store.backgroundImage) : null;
+  const bannerImage = parentCategory?.bannerImage ? resolveImageUrl(parentCategory.bannerImage) : null;
+  const heroImage = effectiveSlug
+    ? (parentCategory ? bannerImage || storeBg : storeBg)
+    : storeBg;
+  const breadcrumbItems = buildBreadcrumbItems(
+    category,
+    categories,
+    !effectiveSlug
+  );
 
   return (
     <div className="category-page">
-      <Hero title={title} />
+      <LuxuryHero
+        image={heroImage}
+        title={title}
+        categoryName={effectiveSlug ? categoryName : null}
+      />
 
-      <div className="category-page-container">
-        <CategorySidebar categories={categories} title="Browse" />
+      <div className="category-page-container luxury-content-spacer" style={{ paddingTop: TOP_NAV_HEIGHT }}>
+        <CategorySidebar
+          categories={categories}
+          parentCategory={parentCategory}
+          title="Browse"
+          activeCategoryId={categoryId}
+        />
 
         <main className="category-page-main">
+          <Breadcrumbs items={breadcrumbItems} />
           {isLoading && (
             <div className="category-page-grid">
               {Array.from({ length: 6 }).map((_, i) => (

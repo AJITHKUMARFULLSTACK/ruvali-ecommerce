@@ -1,4 +1,5 @@
 import React from 'react';
+import { TOP_NAV_HEIGHT } from '../../components/TopNav/TopNav';
 import landingBg from '../../Assets/Images/landingpageBg.png';
 import './Contact.css';
 
@@ -8,7 +9,7 @@ const Contact = () => {
   };
 
   return (
-    <div className="contact-page">
+    <div className="contact-page" style={{ paddingTop: TOP_NAV_HEIGHT }}>
       <div className="contact-wrapper">
         <div className="contact-left">
           <div

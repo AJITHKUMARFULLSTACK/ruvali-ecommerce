@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import logo from '../../Assets/Images/Logo.png';
 import './Hero.css';
 
-const Hero = ({ image, images, title, subtitle, isHome = false }) => {
+const Hero = ({ image, images, title, subtitle, isHome = false, logo: customLogo }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   // Handle slideshow if multiple images are provided
@@ -55,8 +56,8 @@ const Hero = ({ image, images, title, subtitle, isHome = false }) => {
                     </p>
                   </div>
                   <div className="hero-cta-row">
-                    <button className="hero-cta hero-cta--ghost">Rave design 2026</button>
-                    <button className="hero-cta hero-cta--primary">Discover the Collection</button>
+                    <Link to="/c" className="hero-cta hero-cta--ghost">Rave design 2026</Link>
+                    <Link to="/c" className="hero-cta hero-cta--primary">Discover the Collection</Link>
                   </div>
                 </div>
               </>
@@ -69,7 +70,7 @@ const Hero = ({ image, images, title, subtitle, isHome = false }) => {
           </div>
         )}
         <div className="hero-logo">
-          <img src={logo} alt="RUVALI" className="hero-logo-image" />
+          <img src={customLogo || logo} alt="RUVALI" className="hero-logo-image" />
         </div>
         {displayImages.length > 1 && (
           <div className="hero-slideshow-indicators">

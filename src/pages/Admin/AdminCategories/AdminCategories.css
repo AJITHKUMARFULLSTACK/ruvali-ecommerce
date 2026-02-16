@@ -94,6 +94,63 @@
   margin-bottom: 8px;
 }
 
+.admin-cat-item[draggable='true'] {
+  cursor: grab;
+}
+
+.admin-cat-item[draggable='true']:active {
+  cursor: grabbing;
+}
+
+.admin-cat-item--dragging {
+  opacity: 0.5;
+}
+
+.admin-cat-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  color: #888;
+  font-size: 14px;
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.admin-cat-drag-handle:hover {
+  color: var(--primary);
+}
+
+.admin-cat-drag-handle:active {
+  cursor: grabbing;
+}
+
+.admin-cat-banner-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-cat-banner-preview {
+  width: 80px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.admin-cat-banner-input {
+  display: none;
+}
+
+.admin-cat-btn.banner {
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
 .admin-cat-row {
   display: flex;
   align-items: center;

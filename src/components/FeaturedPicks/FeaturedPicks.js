@@ -6,31 +6,28 @@ import CheckoutModal from '../CheckoutModal/CheckoutModal';
 import './FeaturedPicks.css';
 import { useStore } from '../../context/StoreContext';
 
-const FeaturedPicks = ({ title, category = 'men', onProductClick }) => {
+const FeaturedPicks = ({
+  title,
+  categoryId,
+  categorySlug = 'c',
+  onProductClick
+}) => {
   const { storeSlug, backendUrl } = useStore();
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutData, setCheckoutData] = useState(null);
-
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
-        console.log('[FeaturedPicks] Store slug', storeSlug);
+        const params = new URLSearchParams({ storeSlug });
+        if (categoryId) params.set('categoryId', categoryId);
         const res = await fetch(
-          `${backendUrl}/api/products?storeSlug=${encodeURIComponent(storeSlug)}`
+          `${backendUrl}/api/products?${params.toString()}`
         );
         const data = await res.json();
-        console.log('[FeaturedPicks] Products response', data);
-
         if (!Array.isArray(data)) return;
-
-        // For now, just show all products; category-specific filtering can be added later.
-        if (data.length === 0) {
-          console.warn('[FeaturedPicks] No products returned for store', storeSlug);
-        }
-
         setProducts(data.slice(0, 4));
       } catch (err) {
         console.error('[FeaturedPicks] failed to fetch products', err);
@@ -38,7 +35,7 @@ const FeaturedPicks = ({ title, category = 'men', onProductClick }) => {
     };
 
     fetchFeatured();
-  }, [backendUrl, storeSlug, title]);
+  }, [backendUrl, storeSlug, categoryId]);
 
   const handleProductClick = (product) => {
     if (onProductClick) {
@@ -62,7 +59,7 @@ const FeaturedPicks = ({ title, category = 'men', onProductClick }) => {
               />
             ))}
           </div>
-          <Link to={`/${category}`} className="shop-now-btn">
+          <Link to={`/c/${encodeURIComponent(categorySlug)}`} className="shop-now-btn">
             SHOP NOW
           </Link>
         </div>

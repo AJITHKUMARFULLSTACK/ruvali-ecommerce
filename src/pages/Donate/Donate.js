@@ -1,18 +1,10 @@
 import React from 'react';
-import Hero from '../../components/Hero/Hero';
-import landingBg from '../../Assets/Images/LandingBg.png';
-import commonBg from '../../Assets/Images/CommonBg.png';
+import { TOP_NAV_HEIGHT } from '../../components/TopNav/TopNav';
 import './Donate.css';
 
 const Donate = () => {
   return (
-    <div className="donate-page">
-      <Hero 
-        images={[landingBg, commonBg]} 
-        title="SUPPORT OUR CAUSE" 
-        subtitle="DONATE"
-      />
-      
+    <div className="donate-page" style={{ paddingTop: TOP_NAV_HEIGHT }}>
       <div className="donate-container">
         <div className="donate-content">
           <h2 className="donate-title">MAKE A DIFFERENCE</h2>

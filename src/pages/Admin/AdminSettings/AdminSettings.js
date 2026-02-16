@@ -251,20 +251,31 @@ const AdminSettings = () => {
                   Dark
                 </button>
               </div>
-              <p className="theme-preview-hint">This is how your store looks to customers</p>
             </div>
-            <div
-              className="color-preview"
-              style={{
-                backgroundColor: store.secondaryColor,
-                color: store.themeMode === 'DARK' ? '#fff' : '#111',
-              }}
-            >
+            <div className="theme-preview-block">
+              <p className="theme-preview-hint">This is how your store looks to customers</p>
               <div
-                className="preview-accent"
-                style={{ backgroundColor: store.primaryColor, color: '#fff' }}
+                className="color-preview"
+                style={{
+                  backgroundColor: store.secondaryColor,
+                  color: store.themeMode === 'DARK' ? '#fff' : '#111',
+                }}
               >
-                Primary
+                {store.logo && (
+                  <div className="preview-logo-row">
+                    <img
+                      src={resolveImageUrl(store.logo)}
+                      alt="Store logo"
+                      className="preview-logo-in-preview"
+                    />
+                  </div>
+                )}
+                <div
+                  className="preview-accent"
+                  style={{ backgroundColor: store.primaryColor, color: '#fff' }}
+                >
+                  Primary
+                </div>
               </div>
             </div>
           </section>

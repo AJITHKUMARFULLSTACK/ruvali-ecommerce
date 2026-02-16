@@ -8,7 +8,6 @@ import React, {
 import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiGet, apiBaseUrl } from '../lib/apiClient';
-import { resolveImageUrl } from '../lib/imageUtils';
 
 const StoreContext = createContext(null);
 
@@ -55,6 +54,7 @@ export function applyStoreTheme(store) {
     root.style.setProperty('--border', 'rgba(255,255,255,0.12)');
     root.style.setProperty('--surface', '#1a1a1a');
     root.style.setProperty('--surface-hover', '#252525');
+    root.style.setProperty('--nav', 'rgba(255,255,255,0.08)');
   } else {
     root.style.setProperty('--bg', '#ffffff');
     root.style.setProperty('--text', '#111111');
@@ -62,13 +62,12 @@ export function applyStoreTheme(store) {
     root.style.setProperty('--border', 'rgba(0,0,0,0.08)');
     root.style.setProperty('--surface', '#f5f5f5');
     root.style.setProperty('--surface-hover', '#eeeeee');
+    root.style.setProperty('--nav', 'rgba(255,255,255,0.9)');
   }
 
-  if (store.backgroundImage) {
-    root.style.setProperty('--bg-image', `url(${resolveImageUrl(store.backgroundImage)})`);
-  } else {
-    root.style.setProperty('--bg-image', 'none');
-  }
+  root.style.setProperty('--background', isDark ? '#0b0b0b' : '#ffffff');
+  /* Store backgroundImage: homepage/hero only, set via StoreProvider context */
+  root.style.setProperty('--store-bg-image', store.backgroundImage || 'none');
 }
 
 function getStoreSlug(location, defaultSlug) {

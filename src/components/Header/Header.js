@@ -1,8 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import logo from '../../Assets/Images/Logo.png';
+import { useStore } from '../../context/StoreContext';
 import { useCategories } from '../../hooks/useCategories';
 import { useScrollPosition } from '../../hooks/useScrollPosition';
+import { getCategorySlug } from '../../lib/slugUtils';
+import { resolveImageUrl } from '../../lib/imageUtils';
 import './Header.css';
 
 /** Header offset for layout - used for main content padding */
@@ -15,8 +18,11 @@ const SCROLL_AT_COMPACT = 120;
 const Header = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { store } = useStore();
   const { tree: categoriesTree } = useCategories();
   const scrollY = useScrollPosition(16);
+
+  const logoUrl = store?.logo ? resolveImageUrl(store.logo) : logo;
 
   const scrollState = useMemo(() => {
     if (scrollY < SCROLL_AT_MEDIUM) return 'at-top';
@@ -27,10 +33,13 @@ const Header = () => {
 
   const isActive = (path) => location.pathname === path;
   const isCategoryActive = (cat) => {
-    if (location.pathname === `/c/${encodeURIComponent(cat.id)}`) return true;
-    return (cat.children || []).some(
-      (child) => location.pathname === `/c/${encodeURIComponent(child.id)}`
-    );
+    const catSlug = getCategorySlug(cat);
+    const catPath = `/c/${encodeURIComponent(catSlug)}`;
+    if (location.pathname === catPath) return true;
+    return (cat.children || []).some((child) => {
+      const childSlug = getCategorySlug(child);
+      return location.pathname === `/c/${encodeURIComponent(catSlug)}/${encodeURIComponent(childSlug)}`;
+    });
   };
 
   return (
@@ -40,7 +49,7 @@ const Header = () => {
     >
       <div className="header-container">
         <Link to="/" className="logo" aria-label="RUVALI Home">
-          <img src={logo} alt="RUVALI" className="logo-image" />
+          <img src={logoUrl} alt="RUVALI" className="logo-image" />
         </Link>
 
         <nav className={`nav ${isMenuOpen ? 'nav-open' : ''}`} aria-label="Main navigation">
@@ -54,7 +63,7 @@ const Header = () => {
           {categoriesTree.map((cat) => (
             <div key={cat.id} className="nav-item-with-sub">
               <Link
-                to={`/c/${encodeURIComponent(cat.id)}`}
+                to={`/c/${encodeURIComponent(getCategorySlug(cat))}`}
                 className={`nav-link ${isCategoryActive(cat) ? 'active' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -65,8 +74,8 @@ const Header = () => {
                   {cat.children.map((child) => (
                     <Link
                       key={child.id}
-                      to={`/c/${encodeURIComponent(child.id)}`}
-                      className={`nav-sublink ${isActive(`/c/${encodeURIComponent(child.id)}`) ? 'active' : ''}`}
+                      to={`/c/${encodeURIComponent(getCategorySlug(cat))}/${encodeURIComponent(getCategorySlug(child))}`}
+                      className={`nav-sublink ${isActive(`/c/${encodeURIComponent(getCategorySlug(cat))}/${encodeURIComponent(getCategorySlug(child))}`) ? 'active' : ''}`}
                       onClick={() => setIsMenuOpen(false)}
                     >
                       {child.name}

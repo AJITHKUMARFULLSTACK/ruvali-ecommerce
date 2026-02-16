@@ -1,0 +1,213 @@
+/* ============================================
+   RUVALI Luxury Hero - Full screen fashion brand
+   100vh, overlays, logo + glass nav
+   ============================================ */
+
+/* Hero: position relative, overlays are absolute */
+.luxury-hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* Full screen - no container padding */
+}
+
+/* Background image - full cover */
+.luxury-hero-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+}
+
+/* Dark gradient overlay */
+.luxury-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.35) 0%,
+    rgba(0, 0, 0, 0.5) 40%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  z-index: 1;
+}
+
+/* Soft vignette edges */
+.luxury-hero-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 80% 80% at 50% 50%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Depth blur at bottom */
+.luxury-hero-blur-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.6),
+    transparent
+  );
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ----- Logo: top-left ----- */
+.luxury-hero-logo {
+  position: absolute;
+  top: 32px;
+  left: 40px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.3s;
+}
+
+.luxury-hero-logo:hover {
+  opacity: 0.85;
+}
+
+.luxury-hero-logo-image {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1); /* White over dark hero */
+}
+
+/* ----- Category name: top-right, simple & elegant ----- */
+.luxury-hero-category-label {
+  position: absolute;
+  top: 40px;
+  right: 40px;
+  z-index: 10;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+/* ----- Centered brand text (brand layer only) ----- */
+.luxury-hero-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 5;
+}
+
+.luxury-hero-center-logo {
+  display: block;
+  transition: opacity 0.3s;
+}
+
+.luxury-hero-center-logo:hover {
+  opacity: 0.9;
+}
+
+.luxury-hero-center-logo-image {
+  height: clamp(80px, 18vw, 160px);
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.luxury-hero-title {
+  font-family: 'Didot', 'Times New Roman', serif;
+  font-size: clamp(48px, 12vw, 120px);
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 0.95;
+  margin: 0;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+.luxury-hero-subtitle {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-top: 16px;
+}
+
+.luxury-hero-cta {
+  display: inline-block;
+  margin-top: 32px;
+  padding: 16px 40px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: all 0.3s;
+  border-radius: 0;
+}
+
+.luxury-hero-cta:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #fff;
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+  .luxury-hero-logo {
+    top: 24px;
+    left: 24px;
+  }
+
+  .luxury-hero-logo-image {
+    height: 40px;
+  }
+
+  .luxury-hero-category-label {
+    top: 28px;
+    right: 24px;
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+
+  .luxury-hero-nav-pill {
+    gap: 20px;
+    padding: 12px 24px;
+  }
+
+  .luxury-hero-nav-link {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .luxury-hero-title {
+    font-size: clamp(36px, 10vw, 72px);
+  }
+
+  .luxury-hero-subtitle {
+    font-size: 14px;
+  }
+}

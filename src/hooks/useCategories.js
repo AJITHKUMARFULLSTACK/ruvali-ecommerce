@@ -19,6 +19,9 @@ export function buildCategoryTree(categories) {
     }
   });
 
+  const bySort = (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+  roots.sort(bySort);
+  roots.forEach((r) => r.children.sort(bySort));
   return roots;
 }
 

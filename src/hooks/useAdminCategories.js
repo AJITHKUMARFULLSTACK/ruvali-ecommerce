@@ -1,9 +1,30 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/apiClient';
 
+const getBackendUrl = () =>
+  process.env.NODE_ENV === 'development'
+    ? (process.env.REACT_APP_API_URL || 'http://localhost:5005')
+    : (process.env.REACT_APP_API_URL || window.location.origin);
+
 function getAuthHeaders() {
   const token = localStorage.getItem('adminToken');
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+async function uploadCategoryBanner(categoryId, file) {
+  const formData = new FormData();
+  formData.append('banner', file);
+  const base = getBackendUrl();
+  const res = await fetch(`${base}/api/categories/${categoryId}/banner`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || err?.message || res.statusText);
+  }
+  return res.json();
 }
 
 export function useAdminCategories() {
@@ -56,13 +77,48 @@ export function useAdminCategories() {
     },
   });
 
+  const uploadBannerMutation = useMutation({
+    mutationFn: async ({ categoryId, file }) => uploadCategoryBanner(categoryId, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminCategories'] });
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+    },
+  });
+
+  const reorderMutation = useMutation({
+    mutationFn: async (order) => {
+      const base = getBackendUrl();
+      const res = await fetch(`${base}/api/categories/reorder`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ order }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message || err?.message || res.statusText);
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminCategories'] });
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+    },
+  });
+
   return {
     ...query,
     create: createMutation.mutateAsync,
     update: updateMutation.mutateAsync,
     delete: deleteMutation.mutateAsync,
+    uploadBanner: uploadBannerMutation.mutateAsync,
+    reorder: reorderMutation.mutateAsync,
     createLoading: createMutation.isPending,
     updateLoading: updateMutation.isPending,
     deleteLoading: deleteMutation.isPending,
+    uploadBannerLoading: uploadBannerMutation.isPending,
+    reorderLoading: reorderMutation.isPending,
   };
 }

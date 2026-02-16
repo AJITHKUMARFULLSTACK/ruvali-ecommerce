@@ -1,0 +1,196 @@
+/* ============================================
+   TopNav - Navigation layer only
+   Fixed at top: 24px, centered
+   Never overlaps with hero branding role
+   ============================================ */
+
+.top-nav {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.top-nav-pill {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 14px 36px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 4px 24px rgba(0, 0, 0, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Scrolled / over light background: visible border + shadow so nav never blends with white */
+.top-nav--scrolled .top-nav-pill {
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.06),
+    0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.top-nav--scrolled .top-nav-link {
+  color: var(--text);
+}
+
+.top-nav--scrolled .top-nav-link:hover {
+  color: var(--primary);
+}
+
+.top-nav--scrolled .top-nav-link.active {
+  color: var(--primary);
+}
+
+.top-nav-link {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.95);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-decoration: none;
+  transition: color 0.25s, opacity 0.25s;
+  position: relative;
+}
+
+.top-nav-link:hover {
+  color: #fff;
+  opacity: 1;
+}
+
+.top-nav-link.active {
+  font-weight: 600;
+  color: #fff;
+}
+
+.top-nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50%;
+  height: 1px;
+  background: currentColor;
+}
+
+.top-nav--scrolled .top-nav-link.active::after {
+  background: var(--primary);
+}
+
+/* Submenu */
+.top-nav-item {
+  position: relative;
+}
+
+.top-nav-sub {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 160px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.top-nav-item:hover .top-nav-sub {
+  display: flex;
+}
+
+.top-nav-sublink {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  opacity: 0.9;
+}
+
+.top-nav-sublink:hover,
+.top-nav-sublink.active {
+  opacity: 1;
+  color: var(--primary);
+}
+
+/* Mobile toggle */
+.top-nav-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  pointer-events: auto;
+}
+
+.top-nav-toggle span {
+  width: 24px;
+  height: 2px;
+  background: #fff;
+  transition: all 0.3s;
+}
+
+.top-nav--scrolled .top-nav-toggle span {
+  background: var(--text);
+}
+
+@media (max-width: 968px) {
+  .top-nav-pill {
+    gap: 20px;
+    padding: 12px 24px;
+  }
+
+  .top-nav-link {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .top-nav-pill {
+    display: none;
+  }
+
+  .top-nav-toggle {
+    display: flex;
+  }
+
+  .top-nav--open .top-nav-pill {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 72px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    max-width: 320px;
+    padding: 24px;
+    gap: 16px;
+  }
+
+  .top-nav--open .top-nav-link.active::after {
+    display: none;
+  }
+}
