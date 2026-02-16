@@ -1,0 +1,6 @@
+# Use npm install instead of npm ci to avoid lock file sync issues
+[phases.install]
+cmds = ["npm install"]
+
+[phases.build]
+cmds = ["npm run build"]
