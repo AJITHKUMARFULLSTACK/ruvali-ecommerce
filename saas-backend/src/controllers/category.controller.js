@@ -1,22 +1,40 @@
+const multer = require('multer');
 const { asyncHandler } = require('../utils/asyncHandler');
 const {
   listCategoriesForStore,
   createCategoryForStore,
   updateCategoryForStore,
-  deleteCategoryForStore
+  deleteCategoryForStore,
+  reorderCategoriesForStore
 } = require('../services/category.service');
+const { uploadBufferToUrl } = require('./upload.controller');
+const { HttpError } = require('../utils/httpError');
 
-// Public: list by store slug (requireStore)
+const upload = multer({ storage: multer.memoryStorage() });
+const bannerUpload = upload.single('banner');
+
+function toSlug(name) {
+  return (name || '')
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+}
+
+// Public: list by store slug (requireStore). Returns id, name, slug, bannerImage (+ parentId, children for tree)
 const listPublic = asyncHandler(async (req, res) => {
   const cats = await listCategoriesForStore(req.store.id);
+  const withSlug = cats.map((c) => ({
+    ...c,
+    slug: c.slug || toSlug(c.name)
+  }));
 
   console.log('[CATEGORIES:listPublic]', {
     storeId: req.store.id,
     storeSlug: req.store.slug,
-    count: cats.length
+    count: withSlug.length
   });
 
-  res.json(cats);
+  res.json(withSlug);
 });
 
 // Admin: list by admin's store
@@ -66,5 +84,31 @@ const remove = asyncHandler(async (req, res) => {
   res.status(204).send();
 });
 
-module.exports = { listPublic, listAdmin, create, update, remove };
+const reorder = asyncHandler(async (req, res) => {
+  const { order } = req.body || {};
+  if (!Array.isArray(order) || order.length === 0) {
+    throw new HttpError(400, 'order must be a non-empty array of category IDs');
+  }
+  const cats = await reorderCategoriesForStore(req.adminUser.storeId, order);
+  res.json(cats);
+});
+
+const updateBanner = [
+  bannerUpload,
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    if (!req.file) throw new HttpError(400, 'No banner image provided (field: banner)');
+    const storeId = req.adminUser?.storeId;
+    if (!storeId) throw new HttpError(401, 'Admin store not found');
+    const url = await uploadBufferToUrl({
+      buffer: req.file.buffer,
+      originalname: req.file.originalname,
+      storeId
+    });
+    const cat = await updateCategoryForStore(storeId, id, { bannerImage: url });
+    res.json(cat);
+  })
+];
+
+module.exports = { listPublic, listAdmin, create, update, remove, reorder, updateBanner };
 

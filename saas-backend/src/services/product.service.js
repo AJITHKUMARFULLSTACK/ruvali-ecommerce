@@ -12,11 +12,33 @@ async function getProductForStore(storeId, productId) {
   return product;
 }
 
+async function getDescendantCategoryIds(storeId, categoryId) {
+  const all = await prisma.category.findMany({
+    where: { storeId },
+    select: { id: true, parentId: true }
+  });
+  const ids = new Set([categoryId]);
+  let added = true;
+  while (added) {
+    added = false;
+    for (const c of all) {
+      if (c.parentId && ids.has(c.parentId) && !ids.has(c.id)) {
+        ids.add(c.id);
+        added = true;
+      }
+    }
+  }
+  return Array.from(ids);
+}
+
 async function listProductsForStore(storeId, { categoryId } = {}) {
   const where = { storeId };
+
   if (categoryId) {
-    where.categoryId = categoryId;
+    const categoryIds = await getDescendantCategoryIds(storeId, categoryId);
+    where.categoryId = { in: categoryIds };
   }
+
   return prisma.product.findMany({
     where,
     include: { category: true }

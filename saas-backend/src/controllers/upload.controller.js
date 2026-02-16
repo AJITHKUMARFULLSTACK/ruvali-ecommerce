@@ -13,39 +13,41 @@ const upload = multer({ storage });
 
 const singleImageMiddleware = upload.single('image');
 
+/** Shared: upload buffer to Cloudinary or local, return URL */
+async function uploadBufferToUrl({ buffer, originalname, storeId }) {
+  try {
+    const result = await uploadImageBuffer({
+      buffer,
+      filename: originalname,
+      folder: `stores/${storeId}`
+    });
+    return result.secure_url;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('Cloudinary upload failed, falling back to local:', err.message);
+    const ext = path.extname(originalname) || '.png';
+    const safeName = `${Date.now()}${ext}`;
+    const dest = path.join(localUploadDir, safeName);
+    await fs.promises.writeFile(dest, buffer);
+    return `/uploads/${safeName}`;
+  }
+}
+
 const uploadImage = [
   singleImageMiddleware,
   asyncHandler(async (req, res) => {
     if (!req.file) throw new HttpError(400, 'No file provided under field name `image`');
-
-    // Prefer Cloudinary; fallback to local
-    try {
-      const result = await uploadImageBuffer({
-        buffer: req.file.buffer,
-        filename: req.file.originalname,
-        folder: `stores/${req.adminUser.storeId}`
-      });
-      return res.json({
-        url: result.secure_url,
-        provider: 'cloudinary'
-      });
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.warn('Cloudinary upload failed, falling back to local file storage:', err.message);
-
-      // Sanitize filename: keep extension, replace spaces/special chars to avoid URL issues
-      const ext = path.extname(req.file.originalname) || '.png';
-      const safeName = `${Date.now()}${ext}`;
-      const dest = path.join(localUploadDir, safeName);
-      await fs.promises.writeFile(dest, req.file.buffer);
-
-      res.json({
-        url: `/uploads/${safeName}`,
-        provider: 'local'
-      });
-    }
+    const url = await uploadBufferToUrl({
+      buffer: req.file.buffer,
+      originalname: req.file.originalname,
+      storeId: req.adminUser.storeId
+    });
+    res.json({
+      url,
+      provider: url.startsWith('http') ? 'cloudinary' : 'local'
+    });
   })
 ];
 
-module.exports = { uploadImage };
+module.exports = { uploadImage, uploadBufferToUrl };
 

@@ -74,13 +74,16 @@ model Customer {
 }
 
 model Category {
-  id        String   @id @default(cuid())
-  name      String
-  parentId  String?
-  parent    Category?  @relation("CategoryToCategory", fields: [parentId], references: [id], onDelete: SetNull)
-  children  Category[] @relation("CategoryToCategory")
-  storeId   String
-  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  name        String
+  slug        String?
+  bannerImage String?
+  parentId    String?
+  sortOrder   Int      @default(0)
+  parent      Category?  @relation("CategoryToCategory", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[] @relation("CategoryToCategory")
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   products  Product[]
 
