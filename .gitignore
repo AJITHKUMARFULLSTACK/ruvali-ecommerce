@@ -11,6 +11,9 @@
 # production
 /build
 
+# deployment secrets (never commit)
+deployment-secrets.txt
+
 # misc
 .DS_Store
 .env.local

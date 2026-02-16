@@ -1,10 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiGet, apiPost, apiPut, apiDelete } from '../lib/apiClient';
+import { apiGet, apiPost, apiPut, apiDelete, apiBaseUrl } from '../lib/apiClient';
 
-const getBackendUrl = () =>
-  process.env.NODE_ENV === 'development'
-    ? (process.env.REACT_APP_API_URL || 'http://localhost:5005')
-    : (process.env.REACT_APP_API_URL || window.location.origin);
+const getBackendUrl = () => apiBaseUrl || window.location.origin;
 
 function getAuthHeaders() {
   const token = localStorage.getItem('adminToken');

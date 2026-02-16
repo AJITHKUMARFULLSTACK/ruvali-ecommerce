@@ -1,9 +1,7 @@
-// In development, use empty string so requests go through CRA proxy to backend.
-// In production, use full backend URL.
+// Use REACT_APP_API_URL when set. Otherwise: '' (proxy) or fallback.
 const DEFAULT_BASE_URL =
-  process.env.NODE_ENV === 'development'
-    ? ''
-    : (process.env.REACT_APP_API_URL || 'http://localhost:5005');
+  process.env.REACT_APP_API_URL ||
+  (process.env.NODE_ENV === 'development' ? '' : 'http://localhost:5005');
 
 export const apiBaseUrl = DEFAULT_BASE_URL;
 

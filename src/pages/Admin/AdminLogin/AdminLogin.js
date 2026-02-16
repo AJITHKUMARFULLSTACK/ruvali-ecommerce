@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiBaseUrl } from '../../lib/apiClient';
 import './AdminLogin.css';
 
 const AdminLogin = () => {
@@ -15,12 +16,11 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5005/api/admin/login', {
+      const response = await fetch(`${apiBaseUrl}/api/admin/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        // backend expects { email, password }
         body: JSON.stringify({ email: username, password }),
       });
 
