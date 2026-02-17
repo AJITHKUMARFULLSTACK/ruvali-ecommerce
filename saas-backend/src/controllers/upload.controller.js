@@ -23,6 +23,12 @@ async function uploadBufferToUrl({ buffer, originalname, storeId }) {
     });
     return result.secure_url;
   } catch (err) {
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction) {
+      throw new Error(
+        'Cloudinary must be configured in production. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET. Local storage does not persist on Render.'
+      );
+    }
     // eslint-disable-next-line no-console
     console.warn('Cloudinary upload failed, falling back to local:', err.message);
     const ext = path.extname(originalname) || '.png';
