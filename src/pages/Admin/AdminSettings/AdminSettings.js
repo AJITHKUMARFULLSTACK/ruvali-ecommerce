@@ -82,10 +82,15 @@ const AdminSettings = () => {
         body: formData,
       });
       const data = await res.json();
+      if (!res.ok) {
+        const msg = data?.error?.message || 'Upload failed';
+        throw new Error(msg);
+      }
       const url = data.url;
       if (url) setStore((s) => ({ ...s, [field]: url }));
     } catch (err) {
       console.error('Upload failed:', err);
+      alert(err.message || 'Upload failed');
     }
   };
 

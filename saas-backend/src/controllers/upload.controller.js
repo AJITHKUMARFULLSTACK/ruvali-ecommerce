@@ -13,20 +13,25 @@ const upload = multer({ storage });
 
 const singleImageMiddleware = upload.single('image');
 
+const CLOUDINARY_HELP =
+  'Configure Cloudinary on Render: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET';
+
 /** Shared: upload buffer to Cloudinary or local, return URL */
 async function uploadBufferToUrl({ buffer, originalname, storeId }) {
   try {
     const result = await uploadImageBuffer({
       buffer,
       filename: originalname,
-      folder: `stores/${storeId}`
+      folder: `stores/${storeId || 'default'}`
     });
     return result.secure_url;
   } catch (err) {
     const isProduction = process.env.NODE_ENV === 'production';
     if (isProduction) {
-      throw new Error(
-        'Cloudinary must be configured in production. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET. Local storage does not persist on Render.'
+      console.error('[Upload] Cloudinary failed:', err.message);
+      throw new HttpError(
+        503,
+        `Image upload failed. ${CLOUDINARY_HELP}`
       );
     }
     // eslint-disable-next-line no-console

@@ -14,14 +14,20 @@ configureCloudinary();
 
 async function uploadImageBuffer({ buffer, filename, folder }) {
   if (!isCloudinaryConfigured()) {
-    throw new HttpError(500, 'Cloudinary is not configured. Set CLOUDINARY_* env vars.');
+    throw new HttpError(
+      503,
+      'Cloudinary is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET on Render.'
+    );
   }
+
+  const baseName = filename ? filename.replace(/\.[^/.]+$/, '') : 'img';
+  const uniqueId = `${baseName}-${Date.now()}`;
 
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: folder || 'ruvali',
-        public_id: filename ? filename.replace(/\.[^/.]+$/, '') : undefined,
+        public_id: uniqueId,
         resource_type: 'image'
       },
       (error, result) => {

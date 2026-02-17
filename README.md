@@ -98,15 +98,15 @@ The app uses an `isTesting` flag (see `src/config.js`):
 
 Override with `REACT_APP_IS_TESTING=true` or `REACT_APP_IS_TESTING=false` in `.env.local` or Vercel env vars.
 
-### CORS (Render backend)
+### CORS (Render backend) – required for deployment
 
-If you run the frontend locally but point it at the production backend, CORS will block requests unless the backend allows your origin. On Render, set:
+The deployed frontend (Vercel) must be in the backend's allowed origins. On Render, set:
 
 ```
-CORS_ORIGINS=http://localhost:3000,https://ruvali-ecommerce.vercel.app
+CORS_ORIGINS=https://ruvali-ecommerce.vercel.app,http://localhost:3000
 ```
 
-(Comma-separated list of allowed origins.)
+Replace with your actual Vercel URL. See [DEPLOYMENT.md](./DEPLOYMENT.md) for full setup.
 
 ## Future Enhancements
 

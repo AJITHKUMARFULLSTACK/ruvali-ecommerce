@@ -73,11 +73,15 @@ const AdminProductForm = () => {
         body: fd,
       });
       const data = await res.json();
+      if (!res.ok) {
+        const msg = data?.error?.message || 'Upload failed';
+        throw new Error(msg);
+      }
       const url = data.url;
       if (url) setFormData((prev) => ({ ...prev, image: url }));
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Error uploading image');
+      alert(error.message || 'Error uploading image');
     } finally {
       setUploading(false);
     }
