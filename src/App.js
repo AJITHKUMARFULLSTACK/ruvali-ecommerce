@@ -19,8 +19,14 @@ import AdminSettings from './pages/Admin/AdminSettings/AdminSettings';
 import AdminCategories from './pages/Admin/AdminCategories/AdminCategories';
 import AdminLayout from './components/AdminLayout/AdminLayout';
 import CategoryPage from './pages/CategoryPage/CategoryPage';
+import Cart from './pages/Cart/Cart';
+import Checkout from './pages/Checkout/Checkout';
+import Shipping from './pages/Shipping/Shipping';
+import Returns from './pages/Returns/Returns';
+import FAQ from './pages/FAQ/FAQ';
+import SizeGuide from './pages/SizeGuide/SizeGuide';
+import TrackOrder from './pages/TrackOrder/TrackOrder';
 import './App.css';
-import DebugPanel from './components/DebugPanel/DebugPanel';
 
 function App() {
   return (
@@ -40,6 +46,13 @@ function App() {
           <Route path="/donate" element={<MainLayout><Donate /></MainLayout>} />
           <Route path="/about" element={<MainLayout><About /></MainLayout>} />
           <Route path="/contact" element={<MainLayout><Contact /></MainLayout>} />
+          <Route path="/cart" element={<MainLayout><Cart /></MainLayout>} />
+          <Route path="/checkout" element={<MainLayout><Checkout /></MainLayout>} />
+          <Route path="/shipping" element={<MainLayout><Shipping /></MainLayout>} />
+          <Route path="/returns" element={<MainLayout><Returns /></MainLayout>} />
+          <Route path="/faq" element={<MainLayout><FAQ /></MainLayout>} />
+          <Route path="/size-guide" element={<MainLayout><SizeGuide /></MainLayout>} />
+          <Route path="/track-order" element={<MainLayout><TrackOrder /></MainLayout>} />
           <Route path="/payment" element={<MainLayout><Payment /></MainLayout>} />
           <Route path="/order-confirmation" element={<MainLayout><OrderConfirmation /></MainLayout>} />
 
@@ -81,7 +94,6 @@ function App() {
             </ProtectedRoute>
           } />
           </Routes>
-          <DebugPanel />
         </CartProvider>
       </StoreProvider>
     </Router>

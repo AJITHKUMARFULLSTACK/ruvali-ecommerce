@@ -1,32 +1,66 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import logo from '../../Assets/Images/Logo.png';
+import { useStore } from '../../context/StoreContext';
+import { useCategories } from '../../hooks/useCategories';
+import { resolveImageUrl } from '../../lib/imageUtils';
+import { getCategorySlug } from '../../lib/slugUtils';
 import './Footer.css';
 
 const Footer = () => {
+  const { store } = useStore();
+  const { tree: categoriesTree } = useCategories();
+  const logoUrl = store?.logo ? resolveImageUrl(store.logo) : logo;
+
+  const categoryLinks = React.useMemo(() => {
+    const links = [];
+    categoriesTree.forEach((cat) => {
+      links.push({ id: cat.id, name: cat.name, slug: getCategorySlug(cat), parentSlug: null });
+      (cat.children || []).forEach((child) => {
+        links.push({
+          id: child.id,
+          name: child.name,
+          slug: getCategorySlug(child),
+          parentSlug: getCategorySlug(cat),
+        });
+      });
+    });
+    return links;
+  }, [categoriesTree]);
+
   return (
     <footer className="footer">
       <div className="footer-container">
         <div className="footer-section">
           <h3 className="footer-title">PRODUCTS</h3>
           <ul className="footer-links">
-            <li><a href="/men">Men's Collection</a></li>
-            <li><a href="/women">Women's Collection</a></li>
-            <li><a href="/lgbtq">LGBTQ Collection</a></li>
-            <li><a href="/kids">Kids Collection</a></li>
-            <li><a href="/accessories">Accessories</a></li>
-            <li><a href="/shoes">Shoes & Sneakers</a></li>
+            {categoryLinks.length > 0 ? (
+              categoryLinks.map((item) => (
+                <li key={item.id}>
+                  <Link
+                    to={item.parentSlug ? `/c/${encodeURIComponent(item.parentSlug)}/${encodeURIComponent(item.slug)}` : `/c/${encodeURIComponent(item.slug)}`}
+                  >
+                    {item.name}
+                  </Link>
+                </li>
+              ))
+            ) : (
+              <>
+                <li><Link to="/c">Shop All</Link></li>
+              </>
+            )}
           </ul>
         </div>
 
         <div className="footer-section">
           <h3 className="footer-title">CUSTOMER CARE</h3>
           <ul className="footer-links">
-            <li><a href="/contact">Contact Us</a></li>
-            <li><a href="/shipping">Shipping Information</a></li>
-            <li><a href="/returns">Returns & Exchanges</a></li>
-            <li><a href="/faq">FAQ</a></li>
-            <li><a href="/size-guide">Size Guide</a></li>
-            <li><a href="/track-order">Track Your Order</a></li>
+            <li><Link to="/contact">Contact Us</Link></li>
+            <li><Link to="/shipping">Shipping Information</Link></li>
+            <li><Link to="/returns">Returns & Exchanges</Link></li>
+            <li><Link to="/faq">FAQ</Link></li>
+            <li><Link to="/size-guide">Size Guide</Link></li>
+            <li><Link to="/track-order">Track Your Order</Link></li>
           </ul>
         </div>
 
@@ -44,7 +78,7 @@ const Footer = () => {
 
       <div className="footer-bottom">
         <div className="footer-logo-container">
-          <img src={logo} alt="RUVALI" className="footer-logo" />
+          <img src={logoUrl} alt="RUVALI" className="footer-logo" />
           <p>&copy; 2024 RUVALI. All rights reserved.</p>
         </div>
         <p className="footer-tagline">Where Elegance Meets Artistry</p>

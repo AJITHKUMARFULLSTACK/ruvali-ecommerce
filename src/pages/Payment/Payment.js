@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useStore } from '../../context/StoreContext';
+import { resolveImageUrl } from '../../lib/imageUtils';
 import './Payment.css';
 
 const Payment = () => {
@@ -48,6 +49,10 @@ const Payment = () => {
       cardDetails: paymentMethod === 'card' ? cardDetails : null,
     };
 
+    const orderItems = paymentData.items
+      ? paymentData.items.map((i) => ({ productId: i.productId, quantity: i.quantity }))
+      : [{ productId: paymentData.product?.id, quantity: paymentData.quantity || 1 }];
+
     // Create order in backend so it appears in Admin
     try {
       const response = await fetch(
@@ -62,12 +67,7 @@ const Payment = () => {
               name: paymentData.shippingAddress?.fullName || 'Customer',
               phone: paymentData.shippingAddress?.phone || '',
             },
-            items: [
-              {
-                productId: paymentData.product?.id,
-                quantity: paymentData.quantity || 1,
-              },
-            ],
+            items: orderItems,
             shippingInfo: paymentData.shippingAddress,
           }),
         }
@@ -96,14 +96,31 @@ const Payment = () => {
         <div className="payment-content">
           <div className="order-summary-section">
             <h2>Order Summary</h2>
-            <div className="order-item">
-              <img src={orderData.product?.image} alt={orderData.product?.name} />
-              <div>
-                <h3>{orderData.product?.name}</h3>
-                <p>Quantity: {orderData.quantity}</p>
-                <p>Price: ₹{orderData.product?.price.toLocaleString('en-IN')}</p>
+            {orderData.items ? (
+              orderData.items.map((item) => {
+                const img = item.product?.image || (item.product?.images?.[0]);
+                const price = typeof item.product?.price === 'number' ? item.product.price : Number(item.product?.price || 0);
+                return (
+                  <div key={item.productId} className="order-item">
+                    <img src={img ? resolveImageUrl(img) : ''} alt={item.product?.name} />
+                    <div>
+                      <h3>{item.product?.name}</h3>
+                      <p>Quantity: {item.quantity}</p>
+                      <p>Price: ₹{price.toLocaleString('en-IN')} each</p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="order-item">
+                <img src={orderData.product?.image ? resolveImageUrl(orderData.product.image) : ''} alt={orderData.product?.name} />
+                <div>
+                  <h3>{orderData.product?.name}</h3>
+                  <p>Quantity: {orderData.quantity}</p>
+                  <p>Price: ₹{orderData.product?.price?.toLocaleString('en-IN')}</p>
+                </div>
               </div>
-            </div>
+            )}
             <div className="order-totals">
               <div className="total-row">
                 <span>Subtotal</span>

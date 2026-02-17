@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useScrollPosition } from '../../hooks/useScrollPosition';
 import { useCategories } from '../../hooks/useCategories';
+import { useCart } from '../../context/CartContext';
 import { getCategorySlug } from '../../lib/slugUtils';
 import './TopNav.css';
 
@@ -18,10 +19,12 @@ const TopNav = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { tree: categoriesTree } = useCategories();
+  const { getCartCount } = useCart();
+  const cartCount = getCartCount();
   const scrollY = useScrollPosition(16);
 
   const isScrolled = scrollY > SCROLL_BLUR;
-  const noHeroRoutes = ['/about', '/donate', '/contact', '/payment', '/order-confirmation'];
+  const noHeroRoutes = ['/about', '/donate', '/contact', '/payment', '/order-confirmation', '/cart', '/checkout', '/shipping', '/returns', '/faq', '/size-guide', '/track-order'];
   const isOverLightContent =
     isScrolled || noHeroRoutes.some((r) => location.pathname.startsWith(r));
 
@@ -94,6 +97,14 @@ const TopNav = () => {
           onClick={() => setIsMenuOpen(false)}
         >
           Donate
+        </Link>
+        <Link
+          to="/cart"
+          className={`top-nav-link top-nav-cart ${isActive('/cart') ? 'active' : ''}`}
+          onClick={() => setIsMenuOpen(false)}
+          aria-label={`Cart (${cartCount} items)`}
+        >
+          Cart {cartCount > 0 && <span className="top-nav-cart-badge">{cartCount}</span>}
         </Link>
       </div>
       <button

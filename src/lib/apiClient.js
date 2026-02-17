@@ -1,10 +1,12 @@
-// API base URL: REACT_APP_API_URL when set, else dev=proxy, prod=Render backend
-const PRODUCTION_API_URL = 'https://ruvali-ecommerce-1.onrender.com';
-const DEFAULT_BASE_URL =
-  process.env.REACT_APP_API_URL ||
-  (process.env.NODE_ENV === 'development' ? '' : PRODUCTION_API_URL);
+import { isTesting } from '../config';
 
-export const apiBaseUrl = DEFAULT_BASE_URL;
+// isTesting: use local backend via proxy; else use production
+const PRODUCTION_API_URL = 'https://ruvali-ecommerce-1.onrender.com';
+const apiBaseUrl = isTesting
+  ? ''
+  : (process.env.REACT_APP_API_URL || PRODUCTION_API_URL);
+
+export { apiBaseUrl };
 
 async function handleResponse(res) {
   const contentType = res.headers.get('content-type') || '';

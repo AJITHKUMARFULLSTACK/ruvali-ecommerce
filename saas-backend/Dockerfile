@@ -18,5 +18,5 @@ COPY . .
 
 EXPOSE 5005
 
-# Run migrations then start (Render sets PORT automatically)
-CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
+# Run migrations, seed (if needed), then start
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run seed && npm start"]

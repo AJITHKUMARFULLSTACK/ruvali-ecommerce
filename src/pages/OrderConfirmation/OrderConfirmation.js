@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import { resolveImageUrl } from '../../lib/imageUtils';
 import './OrderConfirmation.css';
 
 const OrderConfirmation = () => {
@@ -34,14 +35,31 @@ const OrderConfirmation = () => {
             <span className="detail-value">{orderData.orderId}</span>
           </div>
 
-          <div className="order-product">
-            <img src={orderData.product?.image} alt={orderData.product?.name} />
-            <div>
-              <h3>{orderData.product?.name}</h3>
-              <p>Quantity: {orderData.quantity}</p>
-              <p>Price: ₹{orderData.product?.price.toLocaleString('en-IN')}</p>
+          {orderData.items ? (
+            orderData.items.map((item) => {
+              const img = item.product?.image || item.product?.images?.[0];
+              const price = typeof item.product?.price === 'number' ? item.product.price : Number(item.product?.price || 0);
+              return (
+                <div key={item.productId} className="order-product">
+                  <img src={img ? resolveImageUrl(img) : ''} alt={item.product?.name} />
+                  <div>
+                    <h3>{item.product?.name}</h3>
+                    <p>Quantity: {item.quantity}</p>
+                    <p>Price: ₹{price.toLocaleString('en-IN')} each</p>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="order-product">
+              <img src={orderData.product?.image ? resolveImageUrl(orderData.product.image) : ''} alt={orderData.product?.name} />
+              <div>
+                <h3>{orderData.product?.name}</h3>
+                <p>Quantity: {orderData.quantity}</p>
+                <p>Price: ₹{orderData.product?.price?.toLocaleString('en-IN')}</p>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="detail-section">
             <h3>Shipping Address</h3>

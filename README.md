@@ -87,6 +87,27 @@ ruvali-ecommerce/
 - Category sidebars with active states
 - Responsive grid layouts
 
+## API & Deployment
+
+### Local vs production API
+
+The app uses an `isTesting` flag (see `src/config.js`):
+
+- **Local dev** (`npm start`): `isTesting` is `true` → API requests go to local backend via proxy (`http://localhost:5005`)
+- **Production build** (Vercel): `isTesting` is `false` → API requests go to `https://ruvali-ecommerce-1.onrender.com`
+
+Override with `REACT_APP_IS_TESTING=true` or `REACT_APP_IS_TESTING=false` in `.env.local` or Vercel env vars.
+
+### CORS (Render backend)
+
+If you run the frontend locally but point it at the production backend, CORS will block requests unless the backend allows your origin. On Render, set:
+
+```
+CORS_ORIGINS=http://localhost:3000,https://ruvali-ecommerce.vercel.app
+```
+
+(Comma-separated list of allowed origins.)
+
 ## Future Enhancements
 
 - Shopping cart functionality

@@ -2,16 +2,26 @@
 const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
 
-const prisma = new PrismaClient();
+// Add connect_timeout to avoid hanging on slow networks
+if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('connect_timeout')) {
+  process.env.DATABASE_URL += process.env.DATABASE_URL.includes('?') ? '&connect_timeout=15' : '?connect_timeout=15';
+}
+
+const prisma = new PrismaClient({
+  log: ['error'],
+});
 
 async function main() {
+  console.log('Connecting to database...');
   const existing = await prisma.store.findFirst({
     where: { slug: 'ruvali-demo' }
   });
   if (existing) {
     console.log('Store ruvali-demo already exists, skipping seed.');
+    console.log('Admin login: admin@ruvali-demo.com / admin123');
     return;
   }
+  console.log('Creating store and admin...');
 
   const hashed = await bcrypt.hash('admin123', 12);
 
@@ -42,6 +52,7 @@ async function main() {
 
   console.log('Seeded store:', store.slug);
   console.log('Admin login: admin@ruvali-demo.com / admin123');
+  console.log('Done!');
 }
 
 main()
