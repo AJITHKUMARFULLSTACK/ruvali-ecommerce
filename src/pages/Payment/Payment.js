@@ -46,7 +46,13 @@ const Payment = () => {
     if (e?.preventDefault) e.preventDefault();
     setOrderError(null);
 
-    const totalAmount = orderData.totalAmount + 100;
+    const subtotal =
+      (typeof orderData.totalAmount === 'number' ? orderData.totalAmount : Number(orderData.totalAmount)) ||
+      (orderData.items || []).reduce(
+        (sum, i) => sum + (Number(i.price || i.product?.price || 0) * Number(i.quantity || 1)),
+        0
+      );
+    const totalWithShipping = subtotal + 100;
     const orderItems = orderData.items
       ? orderData.items.map((i) => ({ productId: i.productId, quantity: i.quantity }))
       : [{ productId: orderData.product?.id, quantity: orderData.quantity || 1 }];
@@ -94,17 +100,27 @@ const Payment = () => {
 
     // Card / UPI: Razorpay flow
     try {
+      console.log('[Razorpay] calling create with amount:', totalWithShipping);
       const createRes = await fetch(
         `${backendUrl}/api/orders/razorpay/create?storeSlug=${encodeURIComponent(storeSlug)}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: totalAmount }),
+          body: JSON.stringify({ amount: totalWithShipping }),
         }
       );
       const createData = await createRes.json();
+      console.log('[Razorpay] create response:', createData);
       if (!createRes.ok) {
         setOrderError(createData?.error?.message || createData?.error || 'We could not start payment. Please try again.');
+        return;
+      }
+      if (!createData?.orderId) {
+        setOrderError('Could not initiate payment. Please try again.');
+        return;
+      }
+      if (!window.Razorpay) {
+        setOrderError('Payment system failed to load. Please refresh the page and try again.');
         return;
       }
 
@@ -123,6 +139,7 @@ const Payment = () => {
         theme: { color: '#000000' },
         handler: async function (paymentResponse) {
           try {
+            console.log('[Razorpay] payment success, calling verify');
             const verifyRes = await fetch(
               `${backendUrl}/api/orders/razorpay/verify?storeSlug=${encodeURIComponent(storeSlug)}`,
               {
@@ -140,6 +157,7 @@ const Payment = () => {
               }
             );
             const verifyData = await verifyRes.json();
+            console.log('[Razorpay] verify response:', verifyData);
             if (!verifyRes.ok) {
               setOrderError(verifyData?.error?.message || verifyData?.error || 'Payment verification failed. Please contact support.');
               return;
@@ -159,13 +177,16 @@ const Payment = () => {
         },
         modal: {
           ondismiss: function () {
+            console.log('[Razorpay] popup dismissed by user');
             setOrderError('Payment was cancelled. Please try again.');
           },
         },
       };
+      console.log('[Razorpay] opening popup with orderId:', createData.orderId);
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (err) {
+      console.log('[Razorpay] error:', err);
       console.error('[Payment] Razorpay create failed', err);
       setOrderError('We could not start payment. Please try again.');
     }

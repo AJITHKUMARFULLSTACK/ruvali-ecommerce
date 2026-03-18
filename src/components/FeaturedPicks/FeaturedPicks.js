@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import ProductCard from '../ProductCard/ProductCard';
 import ProductDetail from '../ProductDetail/ProductDetail';
 import CheckoutModal from '../CheckoutModal/CheckoutModal';
+import ScrollReveal from '../ScrollReveal/ScrollReveal';
+import { StaggerGrid, StaggerItem } from '../ScrollReveal/StaggerGrid';
 import './FeaturedPicks.css';
 import { useStore } from '../../context/StoreContext';
 
@@ -49,19 +51,26 @@ const FeaturedPicks = ({
     <>
       <section className="featured-picks">
         <div className="featured-picks-container">
-          <h2 className="featured-picks-title">{title}</h2>
-          <div className="featured-picks-grid">
+          <ScrollReveal>
+            <h2 className="featured-picks-title">{title}</h2>
+          </ScrollReveal>
+
+          <StaggerGrid className="featured-picks-grid">
             {products.map((product) => (
-              <ProductCard 
-                key={product.id} 
-                product={product}
-                onProductClick={handleProductClick}
-              />
+              <StaggerItem key={product.id}>
+                <ProductCard
+                  product={product}
+                  onProductClick={handleProductClick}
+                />
+              </StaggerItem>
             ))}
-          </div>
-          <Link to={`/c/${encodeURIComponent(categorySlug)}`} className="shop-now-btn">
-            SHOP NOW
-          </Link>
+          </StaggerGrid>
+
+          <ScrollReveal delay={0.1}>
+            <Link to={`/c/${encodeURIComponent(categorySlug)}`} className="shop-now-btn">
+              SHOP NOW
+            </Link>
+          </ScrollReveal>
         </div>
       </section>
 

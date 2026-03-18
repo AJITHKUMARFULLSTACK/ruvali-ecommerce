@@ -27,7 +27,7 @@ async function main() {
 
   const store = await prisma.store.create({
     data: {
-      name: 'RUVALI Demo Store',
+      name: 'RUVALI',
       slug: 'ruvali-demo',
       whatsappNumber: '+919876543210',
       currency: 'INR',

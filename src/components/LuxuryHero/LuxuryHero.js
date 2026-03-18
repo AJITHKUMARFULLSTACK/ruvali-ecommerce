@@ -1,8 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { useStore } from '../../context/StoreContext';
-import { resolveImageUrl } from '../../lib/imageUtils';
-import logo from '../../Assets/Images/Logo.png';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import './LuxuryHero.css';
 
 /**
@@ -12,64 +10,82 @@ import './LuxuryHero.css';
  */
 const LuxuryHero = ({
   image,
-  title = 'RUVALI',
-  subtitle,
   isHome = false,
-  categoryName,
 }) => {
-  const { store } = useStore();
-  const logoUrl = store?.logo ? resolveImageUrl(store.logo) : logo;
+  const navigate = useNavigate();
 
-  const bgImage = image
-    ? `url(${image})`
-    : 'linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%)';
+  const heroImage = image;
 
   return (
-    <section className="luxury-hero" style={{ height: '100vh' }}>
-      <div
-        className="luxury-hero-bg"
-        style={{ backgroundImage: bgImage }}
-        aria-hidden
-      />
-      <div className="luxury-hero-overlay" aria-hidden />
-      <div className="luxury-hero-vignette" aria-hidden />
-      <div className="luxury-hero-blur-bottom" aria-hidden />
-
-      <Link to="/" className="luxury-hero-logo" aria-label="RUVALI Home">
-        <img
-          src={logoUrl}
-          alt="RUVALI"
-          className="luxury-hero-logo-image"
-        />
-      </Link>
-
-      {categoryName && (
-        <div className="luxury-hero-category-label">{categoryName}</div>
-      )}
-
-      <div className="luxury-hero-text">
-        {categoryName ? (
-          <Link to="/" className="luxury-hero-center-logo" aria-label="RUVALI Home">
-            <img
-              src={logoUrl}
-              alt="RUVALI"
-              className="luxury-hero-center-logo-image"
-            />
-          </Link>
+    <section className="hero-section">
+      <div className="hero-bg" aria-hidden>
+        {heroImage ? (
+          <img src={heroImage} alt="" className="hero-bg-img" />
         ) : (
-          <>
-            <h1 className="luxury-hero-title">{title}</h1>
-            {subtitle && (
-              <p className="luxury-hero-subtitle">{subtitle}</p>
-            )}
-            {isHome && (
-              <Link to="/c" className="luxury-hero-cta">
-                Discover the Collection
-              </Link>
-            )}
-          </>
+          <div className="hero-bg-img" />
         )}
+        <div className="hero-bg-overlay" />
       </div>
+
+      {isHome ? (
+        <>
+          <div className="hero-content">
+            <div className="hero-line-1">
+              <motion.span
+                className="hero-word-elegance"
+                initial={{ x: 100, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 1, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                ELEGANCE
+              </motion.span>
+            </div>
+
+            <div className="hero-line-2">
+              <motion.span
+                className="hero-word-meets"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay: 0.5 }}
+              >
+                MEETS
+              </motion.span>
+              <motion.span
+                className="hero-word-artistry"
+                initial={{ x: 150, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 1.2, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                ARTISTRY
+              </motion.span>
+            </div>
+          </div>
+
+          <motion.div
+            className="hero-bottom"
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+          >
+            <div className="hero-bottom-left">
+              <div className="hero-red-square" />
+              <div className="hero-subtitle">
+                <p>Step into a world of refined craftsmanship and timeless silhouettes.</p>
+                <p>Each piece is thoughtfully designed to embody grace, confidence, and quiet luxury.</p>
+              </div>
+            </div>
+
+            <div className="hero-bottom-right">
+              <button className="hero-btn-outline" type="button" onClick={() => navigate('/c')}>
+                Rave design 2026
+              </button>
+              <button className="hero-btn-filled" type="button" onClick={() => navigate('/c')}>
+                Discover the Collection
+              </button>
+            </div>
+          </motion.div>
+        </>
+      ) : null}
     </section>
   );
 };

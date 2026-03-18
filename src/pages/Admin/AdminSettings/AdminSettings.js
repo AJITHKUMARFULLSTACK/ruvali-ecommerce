@@ -18,6 +18,8 @@ const AdminSettings = () => {
   const [waStatus, setWaStatus] = useState(null);
   const [waQr, setWaQr] = useState(null);
   const [waConnected, setWaConnected] = useState(false);
+  const [waStreamError, setWaStreamError] = useState(null);
+  const [waInitMessage, setWaInitMessage] = useState(null);
   const qrStreamAbortRef = useRef(null);
 
   const adminStore = (() => {
@@ -64,6 +66,71 @@ const AdminSettings = () => {
 
     let cancelled = false;
 
+    const stopQrStream = () => {
+      qrStreamAbortRef.current?.();
+      qrStreamAbortRef.current = null;
+    };
+
+    const startQrStream = async () => {
+      stopQrStream();
+      setWaStreamError(null);
+
+      const controller = new AbortController();
+      const res = await fetch(`${apiBaseUrl}/api/admin/whatsapp/qr-stream`, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        console.error('[WhatsApp] qr-stream non-200:', res.status, res.statusText);
+        setWaStreamError('Could not open WhatsApp QR stream. Please try initializing again.');
+        return;
+      }
+
+      const reader = res.body?.getReader?.();
+      if (!reader) {
+        console.error('[WhatsApp] qr-stream missing readable body');
+        setWaStreamError('Could not read WhatsApp QR stream. Please try again.');
+        return;
+      }
+
+      qrStreamAbortRef.current = () => {
+        try {
+          controller.abort();
+        } catch {}
+        try {
+          reader.cancel();
+        } catch {}
+      };
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done || cancelled) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const payload = JSON.parse(line.slice(6));
+            console.log('[WhatsApp] SSE event:', payload?.type);
+            if (payload.type === 'qr') setWaQr(payload.qr);
+            if (payload.type === 'ready') {
+              setWaConnected(true);
+              setWaQr(null);
+              setWaInitMessage(null);
+            }
+          } catch (e) {
+            // heartbeat or non-JSON line, ignore
+          }
+        }
+      }
+    };
+
     const fetchStatus = async () => {
       try {
         const data = await apiGet('/api/admin/whatsapp/status', {
@@ -79,49 +146,94 @@ const AdminSettings = () => {
               headers: { Authorization: `Bearer ${token}` },
             });
           }
-          const res = await fetch(`${apiBaseUrl}/api/admin/whatsapp/qr-stream`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (cancelled || !res.ok) return;
-          qrStreamAbortRef.current = () => res.body?.cancel?.();
-
-          const reader = res.body.getReader();
-          const decoder = new TextDecoder();
-          let buffer = '';
-
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done || cancelled) break;
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
-            for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                try {
-                  const payload = JSON.parse(line.slice(6));
-                  if (payload.type === 'qr') setWaQr(payload.qr);
-                  if (payload.type === 'ready') {
-                    setWaConnected(true);
-                    setWaQr(null);
-                  }
-                } catch {
-                  // ignore parse errors
-                }
-              }
-            }
-          }
+          await startQrStream();
         }
       } catch (err) {
-        if (!cancelled) console.error('[WhatsApp] status/stream error:', err);
+        if (!cancelled) {
+          console.error('[WhatsApp] status/stream error:', err);
+          setWaStreamError('Could not load WhatsApp status. Please refresh and try again.');
+        }
       }
     };
 
     fetchStatus();
     return () => {
       cancelled = true;
-      qrStreamAbortRef.current?.();
+      stopQrStream();
     };
   }, []);
+
+  const handleInitWhatsApp = async () => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+    setWaStreamError(null);
+    setWaInitMessage('Starting... please wait for QR code');
+    setWaQr(null);
+    try {
+      await apiPost('/api/admin/whatsapp/init', {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // The stream will deliver QR/ready if init succeeds
+      const controller = new AbortController();
+      const res = await fetch(`${apiBaseUrl}/api/admin/whatsapp/qr-stream`, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
+      });
+      if (!res.ok) {
+        console.error('[WhatsApp] qr-stream non-200 after init:', res.status, res.statusText);
+        setWaStreamError('Could not open WhatsApp QR stream. Please try again.');
+        setWaInitMessage(null);
+        return;
+      }
+
+      const reader = res.body?.getReader?.();
+      if (!reader) {
+        console.error('[WhatsApp] qr-stream missing readable body after init');
+        setWaStreamError('Could not read WhatsApp QR stream. Please try again.');
+        setWaInitMessage(null);
+        return;
+      }
+
+      qrStreamAbortRef.current?.();
+      qrStreamAbortRef.current = () => {
+        try {
+          controller.abort();
+        } catch {}
+        try {
+          reader.cancel();
+        } catch {}
+      };
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const payload = JSON.parse(line.slice(6));
+            console.log('[WhatsApp] SSE event:', payload?.type);
+            if (payload.type === 'qr') setWaQr(payload.qr);
+            if (payload.type === 'ready') {
+              setWaConnected(true);
+              setWaQr(null);
+              setWaInitMessage(null);
+            }
+          } catch (e) {
+            // heartbeat or non-JSON line, ignore
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[WhatsApp] init failed:', err);
+      setWaStreamError('Failed to initialize WhatsApp. Please try again.');
+      setWaInitMessage(null);
+    }
+  };
 
   const updateMutation = useMutation({
     mutationFn: async (payload) => {
@@ -378,9 +490,24 @@ const AdminSettings = () => {
                 Set WHATSAPP_ENABLED=true in your server environment and restart to enable.
               </div>
             )}
+            {waStreamError && (
+              <Alert type="error" message={waStreamError} showIcon style={{ marginTop: 12 }} />
+            )}
             {waStatus?.enabled && (waConnected || waStatus?.ready) && (
               <div style={{ color: 'green', fontWeight: 500 }}>
                 WhatsApp connected. Messages will be sent automatically.
+              </div>
+            )}
+            {waStatus?.enabled && !waConnected && !waStatus?.ready && (
+              <div style={{ marginTop: 12 }}>
+                <Button onClick={handleInitWhatsApp} type="primary">
+                  Initialize WhatsApp
+                </Button>
+                {waInitMessage && (
+                  <div style={{ color: '#888', marginTop: 8 }}>
+                    {waInitMessage}
+                  </div>
+                )}
               </div>
             )}
             {waStatus?.enabled && !waConnected && !waStatus?.ready && waQr && (

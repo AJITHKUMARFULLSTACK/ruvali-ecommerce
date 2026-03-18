@@ -1,6 +1,6 @@
 .App {
   min-height: 100vh;
-  background-color: var(--bg);
+  background-color: transparent;
   color: var(--text);
 }
 

@@ -9,7 +9,9 @@
 }
 
 html {
+  font-size: 62.5%;
   scroll-behavior: smooth;
+  min-height: 100vh;
 }
 
 /* Defaults – overridden by StoreThemeProvider when store loads */
@@ -29,7 +31,9 @@ html {
 }
 
 body {
+  font-size: 1.6rem;
   margin: 0;
+  padding-top: 0;
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -41,6 +45,12 @@ body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+html,
+body {
+  background-color: var(--bg);
+  min-height: 100vh;
 }
 
 code {

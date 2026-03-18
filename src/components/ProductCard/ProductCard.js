@@ -47,9 +47,6 @@ const ProductCard = ({ product, onProductClick }) => {
     <motion.div
       className={`product-card ${isOutOfStock ? 'product-card--out-of-stock' : ''}`}
       onClick={handleCardClick}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
     >
       <div className="product-image-container">

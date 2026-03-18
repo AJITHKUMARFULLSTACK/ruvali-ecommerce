@@ -6,6 +6,7 @@ import { useCart } from '../../context/CartContext';
 import { toast } from '../../lib/toast';
 import { resolveImageUrl } from '../../lib/imageUtils';
 import { TOP_NAV_HEIGHT } from '../../components/TopNav/TopNav';
+import ScrollReveal from '../../components/ScrollReveal/ScrollReveal';
 import './Cart.css';
 
 const itemVariants = {
@@ -53,27 +54,25 @@ const Cart = () => {
         </motion.h1>
 
         {cartItems.length === 0 ? (
-          <motion.div
-            className="cart-empty"
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
-          >
-            <p>Your cart is empty.</p>
-            <Link to="/c" className="cart-continue-btn">
-              Continue Shopping
-            </Link>
-          </motion.div>
+          <ScrollReveal>
+            <div className="cart-empty">
+              <p>Your cart is empty.</p>
+              <Link to="/c" className="cart-continue-btn">
+                Continue Shopping
+              </Link>
+            </div>
+          </ScrollReveal>
         ) : (
           <>
             <div className="cart-items">
               <AnimatePresence mode="popLayout">
-              {cartItems.map((item) => {
+              {cartItems.map((item, index) => {
                 const imgUrl = rawImage(item)
                   ? resolveImageUrl(rawImage(item))
                   : `https://api.lorem.space/image/fashion?w=200&h=200&hash=${item.id}`;
                 return (
-                  <motion.div
+                  <ScrollReveal key={item.id} delay={index * 0.05}>
+                    <motion.div
                     key={item.id}
                     className="cart-item"
                     variants={itemVariants}
@@ -122,29 +121,27 @@ const Cart = () => {
                     <div className="cart-item-total">
                       ₹{(priceNum(item) * item.quantity).toLocaleString('en-IN')}
                     </div>
-                  </motion.div>
+                    </motion.div>
+                  </ScrollReveal>
                 );
               })}
               </AnimatePresence>
             </div>
 
-            <motion.div
-              className="cart-summary"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <div className="cart-summary-row">
-                <span>Total ({getCartCount()} items)</span>
-                <span>₹{getCartTotal().toLocaleString('en-IN')}</span>
+            <ScrollReveal direction="left" delay={0.2}>
+              <div className="cart-summary">
+                <div className="cart-summary-row">
+                  <span>Total ({getCartCount()} items)</span>
+                  <span>₹{getCartTotal().toLocaleString('en-IN')}</span>
+                </div>
+                <Button type="primary" size="large" block className="cart-checkout-btn" onClick={handleCheckout}>
+                  Proceed to Checkout
+                </Button>
+                <Link to="/c" className="cart-continue-link">
+                  Continue Shopping
+                </Link>
               </div>
-              <Button type="primary" size="large" block className="cart-checkout-btn" onClick={handleCheckout}>
-                Proceed to Checkout
-              </Button>
-              <Link to="/c" className="cart-continue-link">
-                Continue Shopping
-              </Link>
-            </motion.div>
+            </ScrollReveal>
           </>
         )}
       </div>

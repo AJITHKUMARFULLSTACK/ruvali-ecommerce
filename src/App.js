@@ -1,5 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { CartProvider } from './context/CartContext';
 import { StoreProvider } from './context/StoreContext';
 import { CustomerProvider } from './context/CustomerContext';
@@ -31,75 +32,85 @@ import CustomerLogin from './pages/CustomerLogin/CustomerLogin';
 import MyOrders from './pages/MyOrders/MyOrders';
 import './App.css';
 
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Public Routes */}
+        <Route path="/" element={<MainLayout><Home /></MainLayout>} />
+        <Route path="/c" element={<MainLayout><CategoryPage /></MainLayout>} />
+        <Route path="/c/:parentSlug/:subSlug" element={<MainLayout><CategoryPage /></MainLayout>} />
+        <Route path="/c/:slug" element={<MainLayout><CategoryPage /></MainLayout>} />
+        <Route path="/men" element={<Navigate to="/c/men" replace />} />
+        <Route path="/women" element={<Navigate to="/c/women" replace />} />
+        <Route path="/kids" element={<Navigate to="/c/kids" replace />} />
+        <Route path="/lgbtq" element={<Navigate to="/c/lgbtq" replace />} />
+        <Route path="/donate" element={<MainLayout><Donate /></MainLayout>} />
+        <Route path="/about" element={<MainLayout><About /></MainLayout>} />
+        <Route path="/contact" element={<MainLayout><Contact /></MainLayout>} />
+        <Route path="/cart" element={<MainLayout><Cart /></MainLayout>} />
+        <Route path="/checkout" element={<MainLayout><Checkout /></MainLayout>} />
+        <Route path="/shipping" element={<MainLayout><Shipping /></MainLayout>} />
+        <Route path="/returns" element={<MainLayout><Returns /></MainLayout>} />
+        <Route path="/faq" element={<MainLayout><FAQ /></MainLayout>} />
+        <Route path="/size-guide" element={<MainLayout><SizeGuide /></MainLayout>} />
+        <Route path="/track-order" element={<MainLayout><TrackOrder /></MainLayout>} />
+        <Route path="/payment" element={<MainLayout><Payment /></MainLayout>} />
+        <Route path="/order-confirmation" element={<MainLayout><OrderConfirmation /></MainLayout>} />
+        <Route path="/account/login" element={<MainLayout><CustomerLogin /></MainLayout>} />
+        <Route path="/account/orders" element={<MainLayout><MyOrders /></MainLayout>} />
+
+        {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={
+          <ProtectedRoute>
+            <AdminLayout><AdminDashboard /></AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/settings" element={
+          <ProtectedRoute>
+            <AdminLayout><AdminSettings /></AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/categories" element={
+          <ProtectedRoute>
+            <AdminLayout><AdminCategories /></AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/products" element={
+          <ProtectedRoute>
+            <AdminLayout><AdminProducts /></AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/products/new" element={
+          <ProtectedRoute>
+            <AdminLayout><AdminProductForm /></AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/products/:id/edit" element={
+          <ProtectedRoute>
+            <AdminLayout><AdminProductForm /></AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/orders" element={
+          <ProtectedRoute>
+            <AdminLayout><AdminOrders /></AdminLayout>
+          </ProtectedRoute>
+        } />
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
 function App() {
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <StoreProvider>
         <CustomerProvider>
         <CartProvider>
-          <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<MainLayout><Home /></MainLayout>} />
-          <Route path="/c" element={<MainLayout><CategoryPage /></MainLayout>} />
-          <Route path="/c/:parentSlug/:subSlug" element={<MainLayout><CategoryPage /></MainLayout>} />
-          <Route path="/c/:slug" element={<MainLayout><CategoryPage /></MainLayout>} />
-          <Route path="/men" element={<Navigate to="/c/men" replace />} />
-          <Route path="/women" element={<Navigate to="/c/women" replace />} />
-          <Route path="/kids" element={<Navigate to="/c/kids" replace />} />
-          <Route path="/lgbtq" element={<Navigate to="/c/lgbtq" replace />} />
-          <Route path="/donate" element={<MainLayout><Donate /></MainLayout>} />
-          <Route path="/about" element={<MainLayout><About /></MainLayout>} />
-          <Route path="/contact" element={<MainLayout><Contact /></MainLayout>} />
-          <Route path="/cart" element={<MainLayout><Cart /></MainLayout>} />
-          <Route path="/checkout" element={<MainLayout><Checkout /></MainLayout>} />
-          <Route path="/shipping" element={<MainLayout><Shipping /></MainLayout>} />
-          <Route path="/returns" element={<MainLayout><Returns /></MainLayout>} />
-          <Route path="/faq" element={<MainLayout><FAQ /></MainLayout>} />
-          <Route path="/size-guide" element={<MainLayout><SizeGuide /></MainLayout>} />
-          <Route path="/track-order" element={<MainLayout><TrackOrder /></MainLayout>} />
-          <Route path="/payment" element={<MainLayout><Payment /></MainLayout>} />
-          <Route path="/order-confirmation" element={<MainLayout><OrderConfirmation /></MainLayout>} />
-          <Route path="/account/login" element={<MainLayout><CustomerLogin /></MainLayout>} />
-          <Route path="/account/orders" element={<MainLayout><MyOrders /></MainLayout>} />
-
-          {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={
-            <ProtectedRoute>
-              <AdminLayout><AdminDashboard /></AdminLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/settings" element={
-            <ProtectedRoute>
-              <AdminLayout><AdminSettings /></AdminLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/categories" element={
-            <ProtectedRoute>
-              <AdminLayout><AdminCategories /></AdminLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/products" element={
-            <ProtectedRoute>
-              <AdminLayout><AdminProducts /></AdminLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/products/new" element={
-            <ProtectedRoute>
-              <AdminLayout><AdminProductForm /></AdminLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/products/:id/edit" element={
-            <ProtectedRoute>
-              <AdminLayout><AdminProductForm /></AdminLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/orders" element={
-            <ProtectedRoute>
-              <AdminLayout><AdminOrders /></AdminLayout>
-            </ProtectedRoute>
-          } />
-          </Routes>
+          <AnimatedRoutes />
         </CartProvider>
         </CustomerProvider>
       </StoreProvider>

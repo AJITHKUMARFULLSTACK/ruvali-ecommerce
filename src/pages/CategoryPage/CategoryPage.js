@@ -10,6 +10,9 @@ import CheckoutModal from '../../components/CheckoutModal/CheckoutModal';
 import CategorySidebar from '../../components/CategorySidebar/CategorySidebar';
 import Breadcrumbs, { buildBreadcrumbItems } from '../../components/Breadcrumbs/Breadcrumbs';
 import ProductCardSkeleton from '../../components/ProductCardSkeleton/ProductCardSkeleton';
+import ScrollReveal from '../../components/ScrollReveal/ScrollReveal';
+import { StaggerGrid, StaggerItem } from '../../components/ScrollReveal/StaggerGrid';
+import splashFallback from '../../Assets/Images/landingpageBg.png';
 import { useStore } from '../../context/StoreContext';
 import { useCategories } from '../../hooks/useCategories';
 import { useProducts } from '../../hooks/useProducts';
@@ -21,6 +24,11 @@ const CategoryPage = () => {
   const { slug, parentSlug, subSlug } = useParams();
   const effectiveSlug = parentSlug ?? slug;
   const effectiveSubSlug = subSlug;
+  const categorySlug = effectiveSlug;
+
+  const shouldShowSplash = !!categorySlug;
+  const [splashDone, setSplashDone] = useState(false);
+  const [splashVisible, setSplashVisible] = useState(shouldShowSplash);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutData, setCheckoutData] = useState(null);
@@ -46,6 +54,32 @@ const CategoryPage = () => {
   useEffect(() => {
     setPage(1);
   }, [categoryId]);
+
+  useEffect(() => {
+    if (!shouldShowSplash) {
+      setSplashDone(true);
+      setSplashVisible(false);
+      document.body.style.overflow = '';
+      return () => {};
+    }
+
+    setSplashDone(false);
+    setSplashVisible(true);
+
+    document.body.style.overflow = 'hidden';
+
+    const slideTimer = setTimeout(() => setSplashDone(true), 1800);
+    const removeTimer = setTimeout(() => {
+      setSplashVisible(false);
+      document.body.style.overflow = '';
+    }, 2800);
+
+    return () => {
+      clearTimeout(slideTimer);
+      clearTimeout(removeTimer);
+      document.body.style.overflow = '';
+    };
+  }, [categorySlug, shouldShowSplash]);
 
   const parentCategory = useMemo(() => {
     if (!category) return null;
@@ -74,6 +108,9 @@ const CategoryPage = () => {
   const heroImage = effectiveSlug
     ? (parentCategory ? bannerImage || storeBg : storeBg)
     : storeBg;
+  const splashImage = heroImage || splashFallback;
+  const splashTitle = category?.name || (categorySlug ? categorySlug.toUpperCase() : title);
+  const splashSub = category?.description || 'Collection';
   const breadcrumbItems = buildBreadcrumbItems(
     category,
     categories,
@@ -82,6 +119,71 @@ const CategoryPage = () => {
 
   return (
     <div className="category-page">
+      {splashVisible && (
+        <motion.div
+          className="category-splash"
+          initial={{ y: 0 }}
+          animate={{ y: splashDone ? '-100%' : 0 }}
+          transition={{
+            duration: 0.9,
+            ease: [0.76, 0, 0.24, 1],
+          }}
+        >
+          <div className="category-splash-bg">
+            {splashImage ? (
+              <img
+                src={splashImage}
+                alt={splashTitle}
+                className="category-splash-img"
+              />
+            ) : (
+              <div className="category-splash-fallback" />
+            )}
+            <div className="category-splash-overlay" />
+          </div>
+
+          <div className="category-splash-content">
+            <motion.h1
+              className="category-splash-title"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.1 }}
+            >
+              {splashTitle}
+            </motion.h1>
+
+            <motion.p
+              className="category-splash-sub"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              {splashSub}
+            </motion.p>
+          </div>
+
+          <motion.div
+            className="category-splash-scroll-hint"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: splashDone ? 0 : 1 }}
+            transition={{ duration: 0.4, delay: 0.8 }}
+          >
+            <div className="category-splash-scroll-line">
+              <motion.div
+                className="category-splash-scroll-dot"
+                animate={{ y: [0, 24, 0] }}
+                transition={{
+                  duration: 1.2,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              />
+            </div>
+            <span className="category-splash-scroll-text">SCROLL TO EXPLORE</span>
+          </motion.div>
+        </motion.div>
+      )}
+
       <LuxuryHero
         image={heroImage}
         title={title}
@@ -97,7 +199,9 @@ const CategoryPage = () => {
         />
 
         <main className="category-page-main">
-          <Breadcrumbs items={breadcrumbItems} />
+          <ScrollReveal>
+            <Breadcrumbs items={breadcrumbItems} />
+          </ScrollReveal>
           {isLoading && (
             <div className="category-page-grid">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -128,23 +232,22 @@ const CategoryPage = () => {
 
           {!isLoading && !error && products.length > 0 && (
             <>
-              <motion.div
+              <StaggerGrid
                 ref={gridRef}
                 className="category-page-grid"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
               >
                 {products.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onProductClick={setSelectedProduct}
-                  />
+                  <StaggerItem key={product.id}>
+                    <ProductCard
+                      product={product}
+                      onProductClick={setSelectedProduct}
+                    />
+                  </StaggerItem>
                 ))}
-              </motion.div>
+              </StaggerGrid>
               {total > 40 && (
-                <div style={{ marginTop: 32, display: 'flex', justifyContent: 'center' }}>
+                <ScrollReveal>
+                  <div style={{ marginTop: 32, display: 'flex', justifyContent: 'center' }}>
                   <Pagination
                     current={page}
                     total={total}
@@ -152,7 +255,8 @@ const CategoryPage = () => {
                     onChange={handlePageChange}
                     showTotal={(t) => `${t} products`}
                   />
-                </div>
+                  </div>
+                </ScrollReveal>
               )}
             </>
           )}

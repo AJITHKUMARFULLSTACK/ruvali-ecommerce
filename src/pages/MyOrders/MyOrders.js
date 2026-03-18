@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useStore } from '../../context/StoreContext';
 import { useCustomer } from '../../context/CustomerContext';
 import { TOP_NAV_HEIGHT } from '../../components/TopNav/TopNav';
+import ScrollReveal from '../../components/ScrollReveal/ScrollReveal';
 import './MyOrders.css';
 
 const STATUS_LABELS = {
@@ -60,10 +61,14 @@ const MyOrders = () => {
     return (
       <div className="my-orders-page" style={{ paddingTop: TOP_NAV_HEIGHT }}>
         <div className="my-orders-container">
-          <h1>My Orders</h1>
-          <p className="my-orders-login-prompt">
-            Please <Link to="/account/login">login</Link> to view your orders.
-          </p>
+          <ScrollReveal>
+            <h1>My Orders</h1>
+          </ScrollReveal>
+          <ScrollReveal delay={0.1}>
+            <p className="my-orders-login-prompt">
+              Please <Link to="/account/login">login</Link> to view your orders.
+            </p>
+          </ScrollReveal>
         </div>
       </div>
     );
@@ -73,8 +78,12 @@ const MyOrders = () => {
     return (
       <div className="my-orders-page" style={{ paddingTop: TOP_NAV_HEIGHT }}>
         <div className="my-orders-container">
-          <h1>My Orders</h1>
-          <p>Loading orders...</p>
+          <ScrollReveal>
+            <h1>My Orders</h1>
+          </ScrollReveal>
+          <ScrollReveal delay={0.1}>
+            <p>Loading orders...</p>
+          </ScrollReveal>
         </div>
       </div>
     );
@@ -84,8 +93,12 @@ const MyOrders = () => {
     return (
       <div className="my-orders-page" style={{ paddingTop: TOP_NAV_HEIGHT }}>
         <div className="my-orders-container">
-          <h1>My Orders</h1>
-          <p className="my-orders-error">{error}</p>
+          <ScrollReveal>
+            <h1>My Orders</h1>
+          </ScrollReveal>
+          <ScrollReveal delay={0.1}>
+            <p className="my-orders-error">{error}</p>
+          </ScrollReveal>
         </div>
       </div>
     );
@@ -94,37 +107,43 @@ const MyOrders = () => {
   return (
     <div className="my-orders-page" style={{ paddingTop: TOP_NAV_HEIGHT }}>
       <div className="my-orders-container">
-        <h1>My Orders</h1>
+        <ScrollReveal>
+          <h1>My Orders</h1>
+        </ScrollReveal>
         {orders.length === 0 ? (
-          <p className="my-orders-empty">You have not placed any orders yet.</p>
+          <ScrollReveal delay={0.1}>
+            <p className="my-orders-empty">You have not placed any orders yet.</p>
+          </ScrollReveal>
         ) : (
           <div className="my-orders-list">
-            {orders.map((order) => (
-              <div key={order.id} className="my-order-card">
-                <div className="my-order-header">
-                  <div>
-                    <h3>Order #{order.id?.slice(-8) || order.id}</h3>
-                    <p>{new Date(order.createdAt).toLocaleDateString()}</p>
-                  </div>
-                  <span
-                    className="my-order-status-badge"
-                    style={{ backgroundColor: STATUS_COLORS[order.status] || '#666' }}
-                  >
-                    {STATUS_LABELS[order.status] || order.status}
-                  </span>
-                </div>
-                <div className="my-order-items">
-                  {order.items?.map((item, i) => (
-                    <div key={i} className="my-order-item">
-                      <span>{item.productName}</span>
-                      <span>{item.quantity} × ₹{Number(item.price || 0).toLocaleString('en-IN')}</span>
+            {orders.map((order, index) => (
+              <ScrollReveal key={order.id} delay={index * 0.06}>
+                <div className="my-order-card">
+                  <div className="my-order-header">
+                    <div>
+                      <h3>Order #{order.id?.slice(-8) || order.id}</h3>
+                      <p>{new Date(order.createdAt).toLocaleDateString()}</p>
                     </div>
-                  ))}
+                    <span
+                      className="my-order-status-badge"
+                      style={{ backgroundColor: STATUS_COLORS[order.status] || '#666' }}
+                    >
+                      {STATUS_LABELS[order.status] || order.status}
+                    </span>
+                  </div>
+                  <div className="my-order-items">
+                    {order.items?.map((item, i) => (
+                      <div key={i} className="my-order-item">
+                        <span>{item.productName}</span>
+                        <span>{item.quantity} × ₹{Number(item.price || 0).toLocaleString('en-IN')}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="my-order-total">
+                    Total: ₹{Number(order.totalAmount || 0).toLocaleString('en-IN')}
+                  </div>
                 </div>
-                <div className="my-order-total">
-                  Total: ₹{Number(order.totalAmount || 0).toLocaleString('en-IN')}
-                </div>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
         )}

@@ -1,56 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { apiBaseUrl } from '../../../lib/apiClient';
+import { useAdminOrders } from '../../../hooks/useAdminOrders';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState({
-    totalOrders: 0,
-    totalRevenue: 0,
-    pendingCount: 0,
-    deliveredCount: 0
-  });
-  const [, setLoading] = useState(true);
+  const { data, isLoading, error } = useAdminOrders({ page: 1, limit: 50 });
+  const orders = data?.orders ?? [];
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  const stats = useMemo(() => {
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+    const pendingCount = orders.filter((o) => o.status === 'PLACED').length;
+    const deliveredCount = orders.filter((o) => o.status === 'DELIVERED').length;
+    return { totalOrders, totalRevenue, pendingCount, deliveredCount };
+  }, [orders]);
 
-  const fetchStats = async () => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${apiBaseUrl}/api/orders`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const orders = await response.json();
-
-      const totalOrders = Array.isArray(orders) ? orders.length : 0;
-      const totalRevenue = Array.isArray(orders)
-        ? orders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0)
-        : 0;
-      const pendingCount = Array.isArray(orders)
-        ? orders.filter(o => o.status === 'PLACED').length
-        : 0;
-      const deliveredCount = Array.isArray(orders)
-        ? orders.filter(o => o.status === 'DELIVERED').length
-        : 0;
-
-      setStats({
-        totalOrders,
-        totalRevenue,
-        pendingCount,
-        deliveredCount
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const recentOrders = useMemo(() => orders.slice(0, 5), [orders]);
 
   return (
     <motion.div
@@ -70,6 +37,20 @@ const AdminDashboard = () => {
         </motion.div>
 
         <div className="admin-stats-grid">
+          {!isLoading && error && (
+            <motion.div
+              className="stat-card"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12, duration: 0.35 }}
+            >
+              <h3>Orders</h3>
+              <p className="stat-value">—</p>
+              <p style={{ marginTop: 10, color: '#333', fontSize: 13 }}>
+                Could not load orders. Please check your admin login and try again.
+              </p>
+            </motion.div>
+          )}
           {[
             { label: 'Total Orders', value: stats.totalOrders },
             { label: 'Total Revenue', value: `₹${stats.totalRevenue.toLocaleString('en-IN')}` },
@@ -89,6 +70,43 @@ const AdminDashboard = () => {
             </motion.div>
           ))}
         </div>
+
+        <motion.div
+          className="admin-quick-actions"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          style={{ marginBottom: 32 }}
+        >
+          <h2>Recent Orders</h2>
+          {isLoading ? (
+            <div style={{ color: '#333' }}>Loading orders...</div>
+          ) : recentOrders.length === 0 ? (
+            <div style={{ color: '#333' }}>No orders yet.</div>
+          ) : (
+            <div style={{ display: 'grid', gap: 12 }}>
+              {recentOrders.map((o) => (
+                <button
+                  key={o.id}
+                  type="button"
+                  className="action-btn"
+                  onClick={() => navigate('/admin/orders')}
+                  style={{ textAlign: 'left' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>Order #{String(o.id).slice(-8)}</div>
+                      <div style={{ fontSize: 12, opacity: 0.85 }}>
+                        {new Date(o.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div style={{ fontWeight: 600 }}>₹{Number(o.totalAmount || 0).toLocaleString('en-IN')}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </motion.div>
 
         <motion.div
           className="admin-quick-actions"

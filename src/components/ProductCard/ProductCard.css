@@ -7,7 +7,7 @@
 }
 
 .product-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-3px);
   box-shadow: 0 10px 30px rgba(255, 0, 0, 0.2);
 }
 
@@ -23,13 +23,13 @@
 
 .product-card-out-of-stock-badge {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 10px;
+  left: 10px;
   z-index: 10;
-  padding: 4px 10px;
+  padding: 3px 8px;
   background-color: rgba(0, 0, 0, 0.75);
   color: #fff;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -71,13 +71,13 @@
 
 .favorite-btn {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 10px;
+  right: 10px;
   background-color: rgba(255, 255, 255, 0.9);
   border: none;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -96,20 +96,20 @@
 }
 
 .product-info {
-  padding: 16px;
+  padding: 12px;
 }
 
 .product-price {
   font-family: 'Outfit', sans-serif;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .product-name {
   font-family: 'Outfit', sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--text);
   margin-bottom: 4px;
@@ -119,10 +119,10 @@
 
 .product-category {
   font-family: 'Outfit', sans-serif;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 300;
   color: #666666;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -134,8 +134,8 @@
 }
 
 .color-dot {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   border: 2px solid #ddd;
   cursor: pointer;
@@ -148,19 +148,24 @@
 
 @media (max-width: 768px) {
   .product-info {
-    padding: 12px;
+    padding: 10px;
   }
 
   .product-price {
-    font-size: 16px;
-  }
-
-  .product-name {
     font-size: 14px;
   }
 
+  .product-name {
+    font-size: 13px;
+  }
+
   .product-category {
-    font-size: 12px;
+    font-size: 11px;
+  }
+
+  .favorite-btn {
+    width: 32px;
+    height: 32px;
   }
 }
 

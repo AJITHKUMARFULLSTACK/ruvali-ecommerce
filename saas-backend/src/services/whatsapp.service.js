@@ -7,9 +7,12 @@ let isInitializing = false;
 let lastQr = null;
 let qrListeners = new Set();
 
-function initWhatsApp() {
+async function initWhatsApp() {
   if (!env.whatsapp.enabled) return;
   if (isInitializing || isReady) return;
+
+  // eslint-disable-next-line no-console
+  console.log('[WhatsApp] Starting initialization...');
 
   isInitializing = true;
   lastQr = null;
@@ -25,6 +28,8 @@ function initWhatsApp() {
   client.on('qr', (qr) => {
     lastQr = qr;
     isReady = false;
+    // eslint-disable-next-line no-console
+    console.log('[WhatsApp] QR code generated, broadcasting to', qrListeners.size, 'listeners');
     qrListeners.forEach((res) => {
       res.write(`data: ${JSON.stringify({ type: 'qr', qr })}\n\n`);
     });
@@ -59,7 +64,13 @@ function initWhatsApp() {
     setTimeout(() => initWhatsApp(), 10000);
   });
 
-  client.initialize();
+  try {
+    await client.initialize();
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[WhatsApp] Failed to initialize:', err.message);
+    isInitializing = false;
+  }
 }
 
 function addQrListener(res) {
