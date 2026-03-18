@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Pagination } from 'antd';
 import LuxuryHero from '../../components/LuxuryHero/LuxuryHero';
 import { TOP_NAV_HEIGHT } from '../../components/TopNav/TopNav';
 import ProductCard from '../../components/ProductCard/ProductCard';
@@ -23,6 +24,8 @@ const CategoryPage = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutData, setCheckoutData] = useState(null);
+  const [page, setPage] = useState(1);
+  const gridRef = useRef(null);
 
   const { store } = useStore();
   const { data: categories = [] } = useCategories();
@@ -40,6 +43,10 @@ const CategoryPage = () => {
 
   const categoryId = category?.id ?? null;
 
+  useEffect(() => {
+    setPage(1);
+  }, [categoryId]);
+
   const parentCategory = useMemo(() => {
     if (!category) return null;
     if (category.parentId) {
@@ -48,9 +55,17 @@ const CategoryPage = () => {
     return category;
   }, [category, categories]);
 
-  const { data: products = [], isLoading, error } = useProducts(
-    categoryId ? { categoryId } : {}
+  const { data, isLoading, error } = useProducts(
+    categoryId ? { categoryId, page, limit: 40 } : { page, limit: 40 }
   );
+
+  const products = data?.products ?? [];
+  const total = data?.total ?? 0;
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    gridRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const categoryName = category?.name || 'All Products';
   const title = categoryId ? `${categoryName.toUpperCase()}` : 'ALL PRODUCTS';
@@ -112,20 +127,34 @@ const CategoryPage = () => {
           )}
 
           {!isLoading && !error && products.length > 0 && (
-            <motion.div
-              className="category-page-grid"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onProductClick={setSelectedProduct}
-                />
-              ))}
-            </motion.div>
+            <>
+              <motion.div
+                ref={gridRef}
+                className="category-page-grid"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                {products.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onProductClick={setSelectedProduct}
+                  />
+                ))}
+              </motion.div>
+              {total > 40 && (
+                <div style={{ marginTop: 32, display: 'flex', justifyContent: 'center' }}>
+                  <Pagination
+                    current={page}
+                    total={total}
+                    pageSize={40}
+                    onChange={handlePageChange}
+                    showTotal={(t) => `${t} products`}
+                  />
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>

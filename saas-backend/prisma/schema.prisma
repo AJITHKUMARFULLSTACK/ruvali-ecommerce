@@ -61,6 +61,8 @@ model Customer {
   id        String   @id @default(cuid())
   name      String
   phone     String
+  email     String?
+  password  String?
   storeId   String
   store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
@@ -71,6 +73,7 @@ model Customer {
 
   @@unique([storeId, phone])
   @@index([storeId])
+  @@index([storeId, email])
 }
 
 model Category {
@@ -118,16 +121,19 @@ model Product {
 }
 
 model Order {
-  id           String      @id @default(cuid())
-  customerId   String
-  customer     Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  id              String      @id @default(cuid())
+  customerId      String
+  customer        Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
 
-  storeId      String
-  store        Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  storeId         String
+  store           Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
-  status       OrderStatus @default(PLACED)
-  totalAmount  Decimal
-  shippingInfo Json?
+  status          OrderStatus @default(PLACED)
+  totalAmount     Decimal
+  shippingAmount  Decimal     @default(0)
+  shippingInfo    Json?
+  paymentId       String?
+  paymentStatus   String      @default("PENDING")
 
   items        OrderItem[]
   logs         OrderStatusLog[]

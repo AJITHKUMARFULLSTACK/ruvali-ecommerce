@@ -1,10 +1,13 @@
 import { isTesting } from '../config';
 
-const PRODUCTION_API_URL = 'https://ruvali-ecommerce-1.onrender.com';
-// Local dev: proxy to backend. Production: use Render backend (or REACT_APP_API_URL)
-const apiBaseUrl =
-  process.env.REACT_APP_API_URL ||
-  (isTesting ? '' : PRODUCTION_API_URL);
+const LOCALHOST_URL = 'http://localhost:5005';
+const PRODUCTION_URL = 'https://ruvali-ecommerce-1.onrender.com';
+
+// isTesting true → always localhost (ignores REACT_APP_API_URL)
+// isTesting false → use REACT_APP_API_URL or production
+const apiBaseUrl = isTesting
+  ? LOCALHOST_URL
+  : (process.env.REACT_APP_API_URL || PRODUCTION_URL);
 
 export { apiBaseUrl };
 

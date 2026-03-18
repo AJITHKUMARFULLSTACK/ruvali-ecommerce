@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import { StoreProvider } from './context/StoreContext';
+import { CustomerProvider } from './context/CustomerContext';
 import MainLayout from './components/MainLayout/MainLayout';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import Home from './pages/Home/Home';
@@ -26,12 +27,15 @@ import Returns from './pages/Returns/Returns';
 import FAQ from './pages/FAQ/FAQ';
 import SizeGuide from './pages/SizeGuide/SizeGuide';
 import TrackOrder from './pages/TrackOrder/TrackOrder';
+import CustomerLogin from './pages/CustomerLogin/CustomerLogin';
+import MyOrders from './pages/MyOrders/MyOrders';
 import './App.css';
 
 function App() {
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <StoreProvider>
+        <CustomerProvider>
         <CartProvider>
           <Routes>
           {/* Public Routes */}
@@ -55,6 +59,8 @@ function App() {
           <Route path="/track-order" element={<MainLayout><TrackOrder /></MainLayout>} />
           <Route path="/payment" element={<MainLayout><Payment /></MainLayout>} />
           <Route path="/order-confirmation" element={<MainLayout><OrderConfirmation /></MainLayout>} />
+          <Route path="/account/login" element={<MainLayout><CustomerLogin /></MainLayout>} />
+          <Route path="/account/orders" element={<MainLayout><MyOrders /></MainLayout>} />
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
@@ -95,6 +101,7 @@ function App() {
           } />
           </Routes>
         </CartProvider>
+        </CustomerProvider>
       </StoreProvider>
     </Router>
   );

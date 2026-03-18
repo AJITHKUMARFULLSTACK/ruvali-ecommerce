@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useScrollPosition } from '../../hooks/useScrollPosition';
 import { useCategories } from '../../hooks/useCategories';
 import { useCart } from '../../context/CartContext';
+import { useCustomer } from '../../context/CustomerContext';
 import { getCategorySlug } from '../../lib/slugUtils';
 import './TopNav.css';
 
@@ -20,6 +21,7 @@ const TopNav = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { tree: categoriesTree } = useCategories();
   const { getCartCount } = useCart();
+  const { customer, logout, isLoggedIn } = useCustomer();
   const cartCount = getCartCount();
   const scrollY = useScrollPosition(16);
 
@@ -44,22 +46,16 @@ const TopNav = () => {
       className={`top-nav ${isOverLightContent ? 'top-nav--scrolled' : ''} ${isMenuOpen ? 'top-nav--open' : ''}`}
       aria-label="Main navigation"
     >
-      <div className="top-nav-pill">
-        <Link
-          to="/"
-          className={`top-nav-link ${location.pathname === '/' ? 'active' : ''}`}
-          onClick={() => setIsMenuOpen(false)}
-        >
-          Home
-        </Link>
-        <Link
-          to="/c"
-          className={`top-nav-link ${location.pathname === '/c' ? 'active' : ''}`}
-          onClick={() => setIsMenuOpen(false)}
-        >
-          Shop
-        </Link>
-        {categoriesTree.map((cat) => (
+      <div className="top-nav-inner">
+        <div className="top-nav-pill">
+          <Link
+            to="/c"
+            className={`top-nav-link ${(location.pathname === '/' || location.pathname === '/c') ? 'active' : ''}`}
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Shop
+          </Link>
+          {categoriesTree.map((cat) => (
           <div key={cat.id} className="top-nav-item">
             <Link
               to={`/c/${encodeURIComponent(getCategorySlug(cat))}`}
@@ -98,15 +94,50 @@ const TopNav = () => {
         >
           Donate
         </Link>
-        <Link
-          to="/cart"
-          className={`top-nav-link top-nav-cart ${isActive('/cart') ? 'active' : ''}`}
-          onClick={() => setIsMenuOpen(false)}
-          aria-label={`Cart (${cartCount} items)`}
-        >
-          Cart {cartCount > 0 && <span className="top-nav-cart-badge">{cartCount}</span>}
-        </Link>
+        <div className="top-nav-account">
+        {isLoggedIn ? (
+          <>
+            <span className="top-nav-customer-name">{customer?.name}</span>
+            <Link
+              to="/account/orders"
+              className="top-nav-link top-nav-orders-link"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              My Orders
+            </Link>
+            <button
+              type="button"
+              className="top-nav-logout-btn"
+              onClick={() => { logout(); setIsMenuOpen(false); }}
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <Link
+            to="/account/login"
+            className="top-nav-link top-nav-login-link"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Login
+          </Link>
+        )}
+        </div>
+        </div>
       </div>
+      <Link
+        to="/cart"
+        className="top-nav-cart-icon"
+        onClick={() => setIsMenuOpen(false)}
+        aria-label={`Cart (${cartCount} items)`}
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <path d="M16 10a4 4 0 01-8 0" />
+        </svg>
+        {cartCount > 0 && <span className="top-nav-cart-badge">{cartCount}</span>}
+      </Link>
       <button
         className="top-nav-toggle"
         onClick={() => setIsMenuOpen(!isMenuOpen)}

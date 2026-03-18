@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button, Select, Pagination } from 'antd';
+import { toast } from '../../../lib/toast';
+import { resolveImageUrl } from '../../../lib/imageUtils';
 import { useAdminOrders } from '../../../hooks/useAdminOrders';
 import './AdminOrders.css';
 
@@ -13,36 +16,54 @@ const STATUS_COLORS = {
 
 const AdminOrders = () => {
   const [filter, setFilter] = useState('all');
+  const [page, setPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const { data: orders = [], isLoading, updateStatus, updateLoading } = useAdminOrders();
+  const listRef = useRef(null);
+  const { data, isLoading, updateStatus, updateLoading } = useAdminOrders({ page, limit: 20 });
+
+  const orders = data?.orders ?? [];
+  const total = data?.total ?? 0;
 
   const filteredOrders = filter === 'all'
     ? orders
     : orders.filter((o) => o.status === filter);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter]);
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    listRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       await updateStatus({ orderId, status: newStatus });
       setSelectedOrder(null);
     } catch (err) {
-      alert(err.message || 'Failed to update status');
+      toast.error(err.message || 'Failed to update status');
     }
   };
 
   return (
-    <div className="admin-orders">
+    <div className="admin-orders" ref={listRef}>
       <h1>Orders</h1>
 
       <div className="admin-orders-filters">
-        {['all', 'PLACED', 'CONFIRMED', 'PACKED', 'SHIPPED', 'DELIVERED'].map((s) => (
-          <button
-            key={s}
-            className={`admin-orders-filter-btn ${filter === s ? 'active' : ''}`}
-            onClick={() => setFilter(s)}
-          >
-            {s === 'all' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
-          </button>
-        ))}
+        <Select
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: 'all', label: 'All' },
+            { value: 'PLACED', label: 'Placed' },
+            { value: 'CONFIRMED', label: 'Confirmed' },
+            { value: 'PACKED', label: 'Packed' },
+            { value: 'SHIPPED', label: 'Shipped' },
+            { value: 'DELIVERED', label: 'Delivered' },
+          ]}
+          style={{ minWidth: 140 }}
+        />
       </div>
 
       {isLoading ? (
@@ -80,6 +101,18 @@ const AdminOrders = () => {
         </div>
       )}
 
+      {!isLoading && total > 0 && (
+        <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center' }}>
+          <Pagination
+            current={page}
+            total={total}
+            pageSize={20}
+            onChange={handlePageChange}
+            showTotal={(t) => `${t} orders`}
+          />
+        </div>
+      )}
+
       <AnimatePresence>
         {selectedOrder && (
           <motion.div
@@ -98,24 +131,24 @@ const AdminOrders = () => {
             >
               <div className="admin-order-modal-header">
                 <h2>Order #{selectedOrder.id.slice(-8)}</h2>
-                <button onClick={() => setSelectedOrder(null)}>×</button>
+                <Button type="text" onClick={() => setSelectedOrder(null)}>×</Button>
               </div>
               <div className="admin-order-modal-body">
                 <div className="admin-order-status-section">
                   <label>Status</label>
-                  <select
+                  <Select
                     value={selectedOrder.status}
-                    onChange={(e) =>
-                      handleStatusChange(selectedOrder.id, e.target.value)
-                    }
-                    disabled={updateLoading}
-                  >
-                    <option value="PLACED">Placed</option>
-                    <option value="CONFIRMED">Confirmed</option>
-                    <option value="PACKED">Packed</option>
-                    <option value="SHIPPED">Shipped</option>
-                    <option value="DELIVERED">Delivered</option>
-                  </select>
+                    onChange={(v) => handleStatusChange(selectedOrder.id, v)}
+                    loading={updateLoading}
+                    style={{ width: '100%' }}
+                    options={[
+                      { value: 'PLACED', label: 'Placed' },
+                      { value: 'CONFIRMED', label: 'Confirmed' },
+                      { value: 'PACKED', label: 'Packed' },
+                      { value: 'SHIPPED', label: 'Shipped' },
+                      { value: 'DELIVERED', label: 'Delivered' },
+                    ]}
+                  />
                 </div>
 
                 <div className="admin-order-items">
@@ -123,10 +156,7 @@ const AdminOrders = () => {
                   {selectedOrder.items?.map((item, i) => (
                     <div key={i} className="admin-order-item">
                       <img
-                        src={
-                          item.product?.images?.[0] ||
-                          'https://via.placeholder.com/80x80?text=No+Image'
-                        }
+                        src={resolveImageUrl(item.product?.images?.[0])}
                         alt={item.product?.name}
                       />
                       <div>

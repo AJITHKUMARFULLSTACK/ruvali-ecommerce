@@ -1,11 +1,10 @@
 /**
- * API environment config
+ * API Config
  *
- * Local dev: use proxy (empty base URL)
- * Production (Vercel): always use production backend
+ * isTesting = true  → localhost (http://localhost:5005)
+ * isTesting = false → production (https://ruvali-ecommerce-1.onrender.com)
  *
- * REACT_APP_API_URL overrides the backend URL when set.
+ * Override: REACT_APP_IS_TESTING=true or false in .env
+ * (If not set: dev = true, production build = false)
  */
-const isProduction = process.env.NODE_ENV === 'production';
-
-export const isTesting = !isProduction;
+export const isTesting = true;

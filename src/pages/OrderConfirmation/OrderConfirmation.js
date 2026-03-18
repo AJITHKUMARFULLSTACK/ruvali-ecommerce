@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Button } from 'antd';
 import { useCart } from '../../context/CartContext';
 import { resolveImageUrl } from '../../lib/imageUtils';
 import './OrderConfirmation.css';
@@ -21,7 +23,12 @@ const OrderConfirmation = () => {
   }
 
   return (
-    <div className="order-confirmation-page">
+    <motion.div
+      className="order-confirmation-page"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
       <div className="order-confirmation-container">
         <div className="success-icon">✓</div>
         <h1 className="confirmation-title">Order Confirmed!</h1>
@@ -32,7 +39,11 @@ const OrderConfirmation = () => {
           
           <div className="detail-row">
             <span className="detail-label">Order ID:</span>
-            <span className="detail-value">{orderData.orderId}</span>
+            <span className="detail-value">
+              {orderData.backendOrder?.id
+                ? `#${orderData.backendOrder.id.toUpperCase()}`
+                : orderData.orderId || '—'}
+            </span>
           </div>
 
           {orderData.items ? (
@@ -83,7 +94,13 @@ const OrderConfirmation = () => {
             </div>
             <div className="detail-row">
               <span className="detail-label">Total Amount:</span>
-              <span className="detail-value">₹{(orderData.totalAmount + 100).toLocaleString('en-IN')}</span>
+              <span className="detail-value">
+                ₹{(
+                  orderData.backendOrder?.totalAmount != null
+                    ? Number(orderData.backendOrder.totalAmount)
+                    : (orderData.totalAmount || 0) + 100
+                ).toLocaleString('en-IN')}
+              </span>
             </div>
           </div>
 
@@ -95,15 +112,15 @@ const OrderConfirmation = () => {
         </div>
 
         <div className="confirmation-actions">
-          <button onClick={() => navigate('/')} className="btn-continue-shopping">
+          <Button type="primary" size="large" onClick={() => navigate('/')} className="btn-continue-shopping">
             Continue Shopping
-          </button>
-          <button onClick={() => window.print()} className="btn-print">
+          </Button>
+          <Button size="large" onClick={() => window.print()} className="btn-print">
             Print Receipt
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

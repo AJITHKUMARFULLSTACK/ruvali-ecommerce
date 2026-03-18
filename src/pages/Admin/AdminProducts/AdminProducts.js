@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Button, Select, Modal } from 'antd';
+import { toast } from '../../../lib/toast';
 import { useAdminProducts } from '../../../hooks/useAdminProducts';
 import { useAdminCategories } from '../../../hooks/useAdminCategories';
 import { resolveImageUrl } from '../../../lib/imageUtils';
@@ -17,37 +19,43 @@ const AdminProducts = () => {
     ? products.filter((p) => p.categoryId === categoryFilter)
     : products;
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this product?')) return;
-    try {
-      await deleteProduct(id);
-    } catch (err) {
-      alert(err.message || 'Failed to delete');
-    }
+  const handleDelete = (id) => {
+    Modal.confirm({
+      title: 'Delete Product',
+      content: 'Are you sure you want to delete this product?',
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          await deleteProduct(id);
+          toast.success('Product deleted');
+        } catch (err) {
+          toast.error(err.message || 'Failed to delete');
+        }
+      },
+    });
   };
 
   return (
     <div className="admin-products">
       <div className="admin-products-header">
         <h1>Products</h1>
-        <button onClick={() => navigate('/admin/products/new')} className="admin-products-add-btn">
+        <Button type="primary" size="large" onClick={() => navigate('/admin/products/new')} className="admin-products-add-btn">
           Add New Product
-        </button>
+        </Button>
       </div>
 
       <div className="admin-products-filters">
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
+        <Select
+          value={categoryFilter || undefined}
+          onChange={(v) => setCategoryFilter(v || '')}
+          placeholder="All Categories"
+          allowClear
           className="admin-products-filter-select"
-        >
-          <option value="">All Categories</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
+          style={{ minWidth: 200 }}
+          options={[{ value: '', label: 'All Categories' }, ...categories.map((c) => ({ value: c.id, label: c.name }))]}
+        />
       </div>
 
       {isLoading ? (
@@ -86,16 +94,10 @@ const AdminProducts = () => {
                   Stock: {product.stock ?? 0}
                 </p>
                 <div className="admin-product-actions">
-                  <button onClick={() => navigate(`/admin/products/${product.id}/edit`)}>
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(product.id)}
-                    disabled={deleteLoading}
-                    className="admin-products-delete-btn"
-                  >
+                  <Button onClick={() => navigate(`/admin/products/${product.id}/edit`)}>Edit</Button>
+                  <Button danger onClick={() => handleDelete(product.id)} loading={deleteLoading}>
                     Delete
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

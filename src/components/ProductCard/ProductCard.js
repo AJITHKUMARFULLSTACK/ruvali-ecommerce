@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { resolveImageUrl } from '../../lib/imageUtils';
 import './ProductCard.css';
 
@@ -14,7 +15,10 @@ const ProductCard = ({ product, onProductClick }) => {
     setIsFavorite(!isFavorite);
   };
 
+  const isOutOfStock = (product.stock ?? 0) === 0;
+
   const handleCardClick = () => {
+    if (isOutOfStock) return;
     if (onProductClick) {
       onProductClick(product);
     }
@@ -40,8 +44,18 @@ const ProductCard = ({ product, onProductClick }) => {
       : Number(product.price || 0);
 
   return (
-    <div className="product-card" onClick={handleCardClick}>
+    <motion.div
+      className={`product-card ${isOutOfStock ? 'product-card--out-of-stock' : ''}`}
+      onClick={handleCardClick}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+    >
       <div className="product-image-container">
+        {isOutOfStock && (
+          <span className="product-card-out-of-stock-badge">Out of stock</span>
+        )}
         <img
           src={imageUrl}
           alt={product.name}
@@ -90,7 +104,7 @@ const ProductCard = ({ product, onProductClick }) => {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 

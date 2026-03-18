@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { Input, Button, Alert } from 'antd';
+import { QRCodeSVG as QRCode } from 'qrcode.react';
 import { apiGet, apiPut, apiPost, apiBaseUrl } from '../../../lib/apiClient';
+import { toast } from '../../../lib/toast';
 import { resolveImageUrl } from '../../../lib/imageUtils';
 import { applyStoreTheme } from '../../../context/StoreContext';
 import './AdminSettings.css';
@@ -12,6 +15,10 @@ const AdminSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('branding');
+  const [waStatus, setWaStatus] = useState(null);
+  const [waQr, setWaQr] = useState(null);
+  const [waConnected, setWaConnected] = useState(false);
+  const qrStreamAbortRef = useRef(null);
 
   const adminStore = (() => {
     try {
@@ -49,6 +56,72 @@ const AdminSettings = () => {
   useEffect(() => {
     if (store) applyStoreTheme(store);
   }, [store]);
+
+  /* WhatsApp status and QR stream */
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+
+    let cancelled = false;
+
+    const fetchStatus = async () => {
+      try {
+        const data = await apiGet('/api/admin/whatsapp/status', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (cancelled) return;
+        setWaStatus(data);
+        setWaConnected(data.ready);
+
+        if (data.enabled && !data.ready) {
+          if (!data.hasQr) {
+            await apiPost('/api/admin/whatsapp/init', {}, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+          }
+          const res = await fetch(`${apiBaseUrl}/api/admin/whatsapp/qr-stream`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (cancelled || !res.ok) return;
+          qrStreamAbortRef.current = () => res.body?.cancel?.();
+
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done || cancelled) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const payload = JSON.parse(line.slice(6));
+                  if (payload.type === 'qr') setWaQr(payload.qr);
+                  if (payload.type === 'ready') {
+                    setWaConnected(true);
+                    setWaQr(null);
+                  }
+                } catch {
+                  // ignore parse errors
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        if (!cancelled) console.error('[WhatsApp] status/stream error:', err);
+      }
+    };
+
+    fetchStatus();
+    return () => {
+      cancelled = true;
+      qrStreamAbortRef.current?.();
+    };
+  }, []);
 
   const updateMutation = useMutation({
     mutationFn: async (payload) => {
@@ -90,7 +163,7 @@ const AdminSettings = () => {
       if (url) setStore((s) => ({ ...s, [field]: url }));
     } catch (err) {
       console.error('Upload failed:', err);
-      alert(err.message || 'Upload failed');
+      toast.error(err.message || 'Upload failed');
     }
   };
 
@@ -108,10 +181,10 @@ const AdminSettings = () => {
         whatsappNumber: store.whatsappNumber,
       });
       setStore((s) => ({ ...s }));
-      alert('Store settings saved successfully!');
+      toast.success('Store settings saved successfully!');
     } catch (err) {
       console.error(err);
-      alert(err?.message || 'Failed to save settings');
+      toast.error(err?.message || 'Failed to save settings');
     } finally {
       setSaving(false);
     }
@@ -126,12 +199,9 @@ const AdminSettings = () => {
       <h1>Store Settings</h1>
 
       <div className="settings-tabs">
-        <button
-          className={activeTab === 'branding' ? 'active' : ''}
-          onClick={() => setActiveTab('branding')}
-        >
+        <Button type={activeTab === 'branding' ? 'primary' : 'default'} onClick={() => setActiveTab('branding')}>
           Branding & Theme
-        </button>
+        </Button>
       </div>
 
       {activeTab === 'branding' && (
@@ -145,11 +215,11 @@ const AdminSettings = () => {
             <h2>Store Identity</h2>
             <div className="form-group">
               <label>Store Name</label>
-              <input
-                type="text"
+              <Input
                 value={store.name}
                 onChange={(e) => setStore((s) => ({ ...s, name: e.target.value }))}
                 placeholder="Store name"
+                size="large"
               />
             </div>
 
@@ -289,24 +359,51 @@ const AdminSettings = () => {
             <h2>Contact</h2>
             <div className="form-group">
               <label>WhatsApp Number</label>
-              <input
-                type="text"
+              <Input
                 value={store.whatsappNumber}
                 onChange={(e) =>
                   setStore((s) => ({ ...s, whatsappNumber: e.target.value }))
                 }
                 placeholder="+919876543210"
+                size="large"
               />
             </div>
           </section>
 
-          <button
-            onClick={handleSave}
-            className="btn-primary"
-            disabled={saving}
-          >
-            {saving ? 'Saving...' : 'Save Settings'}
-          </button>
+          <section className="settings-block">
+            <h2>WhatsApp</h2>
+            {!waStatus?.enabled && (
+              <div style={{ color: '#888' }}>
+                WhatsApp notifications are disabled.
+                Set WHATSAPP_ENABLED=true in your server environment and restart to enable.
+              </div>
+            )}
+            {waStatus?.enabled && (waConnected || waStatus?.ready) && (
+              <div style={{ color: 'green', fontWeight: 500 }}>
+                WhatsApp connected. Messages will be sent automatically.
+              </div>
+            )}
+            {waStatus?.enabled && !waConnected && !waStatus?.ready && waQr && (
+              <div>
+                <Alert type="warning" message="WhatsApp not connected — scan the QR code below with your WhatsApp" showIcon />
+                <div style={{ marginTop: 16, display: 'inline-block', padding: 16, background: 'white', borderRadius: 8 }}>
+                  <QRCode value={waQr} size={200} />
+                </div>
+                <p style={{ color: '#888', marginTop: 8, fontSize: 13 }}>
+                  Open WhatsApp on your phone → tap Menu → Linked Devices → Link a Device → scan this code
+                </p>
+              </div>
+            )}
+            {waStatus?.enabled && !waConnected && !waStatus?.ready && !waQr && (
+              <div style={{ color: '#888' }}>
+                Connecting to WhatsApp...
+              </div>
+            )}
+          </section>
+
+          <Button type="primary" size="large" onClick={handleSave} loading={saving}>
+            Save Settings
+          </Button>
         </motion.div>
       )}
     </div>

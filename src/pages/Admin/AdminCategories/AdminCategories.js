@@ -1,8 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Input, Button, Select, Modal } from 'antd';
 import { useAdminCategories } from '../../../hooks/useAdminCategories';
 import { buildCategoryTree } from '../../../hooks/useCategories';
 import { resolveImageUrl } from '../../../lib/imageUtils';
+import { toast } from '../../../lib/toast';
 import './AdminCategories.css';
 
 const AdminCategories = () => {
@@ -74,14 +76,22 @@ const AdminCategories = () => {
     }
   };
 
-  const handleDelete = async (cat) => {
-    if (!window.confirm(`Delete "${cat.name}"?`)) return;
-    setError(null);
-    try {
-      await deleteCat(cat.id);
-    } catch (err) {
-      setError(err.message || 'Failed to delete');
-    }
+  const handleDelete = (cat) => {
+    Modal.confirm({
+      title: 'Delete Category',
+      content: `Delete "${cat.name}"?`,
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          await deleteCat(cat.id);
+          toast.success('Category deleted');
+        } catch (err) {
+          toast.error(err.message || 'Failed to delete');
+        }
+      },
+    });
   };
 
   const handleBannerUpload = async (cat, e) => {
@@ -149,19 +159,19 @@ const AdminCategories = () => {
       <div className="admin-cat-row">
         {editingId === cat.id ? (
           <>
-            <input
-              type="text"
+            <Input
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
               className="admin-cat-input"
               autoFocus
+              size="small"
             />
-            <button onClick={handleSaveEdit} disabled={updateLoading} className="admin-cat-btn save">
+            <Button type="primary" size="small" onClick={handleSaveEdit} loading={updateLoading} className="admin-cat-btn save">
               Save
-            </button>
-            <button onClick={handleCancelEdit} className="admin-cat-btn cancel">
+            </Button>
+            <Button size="small" onClick={handleCancelEdit} className="admin-cat-btn cancel">
               Cancel
-            </button>
+            </Button>
           </>
         ) : (
           <>
@@ -187,21 +197,22 @@ const AdminCategories = () => {
                 className="admin-cat-banner-input"
                 hidden
               />
-              <button
-                type="button"
+              <Button
+                size="small"
                 onClick={() => fileInputRefs.current[cat.id]?.click()}
+                loading={uploadingBannerId === cat.id}
                 disabled={uploadBannerLoading}
                 className="admin-cat-btn banner"
               >
-                {uploadingBannerId === cat.id ? 'Uploading...' : cat.bannerImage ? 'Change Banner' : 'Upload Banner'}
-              </button>
+                {cat.bannerImage ? 'Change Banner' : 'Upload Banner'}
+              </Button>
             </div>
-            <button onClick={() => handleStartEdit(cat)} className="admin-cat-btn">
+            <Button size="small" onClick={() => handleStartEdit(cat)} className="admin-cat-btn">
               Edit
-            </button>
-            <button onClick={() => handleDelete(cat)} disabled={deleteLoading} className="admin-cat-btn delete">
+            </Button>
+            <Button danger size="small" onClick={() => handleDelete(cat)} loading={deleteLoading} className="admin-cat-btn delete">
               Delete
-            </button>
+            </Button>
           </>
         )}
       </div>
@@ -217,12 +228,9 @@ const AdminCategories = () => {
     <div className="admin-categories">
       <div className="admin-categories-header">
         <h1>Category Manager</h1>
-        <button
-          onClick={() => setShowNewForm(!showNewForm)}
-          className="admin-cat-add-btn"
-        >
+        <Button type="primary" onClick={() => setShowNewForm(!showNewForm)} className="admin-cat-add-btn">
           {showNewForm ? 'Cancel' : '+ New Category'}
-        </button>
+        </Button>
       </div>
 
       {error && (
@@ -241,33 +249,28 @@ const AdminCategories = () => {
           >
             <h3>New Category</h3>
             <div className="admin-cat-form-row">
-              <input
-                type="text"
+              <Input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Category name"
                 className="admin-cat-input"
-                required
-                minLength={1}
+                size="middle"
               />
-              <select
-                value={newParentId || ''}
-                onChange={(e) => setNewParentId(e.target.value || null)}
+              <Select
+                value={newParentId || undefined}
+                onChange={(v) => setNewParentId(v || null)}
+                placeholder="Main category (no parent)"
+                allowClear
                 className="admin-cat-select"
-              >
-                <option value="">Main category (no parent)</option>
-                {tree.flatMap((c) => [
-                  <option key={c.id} value={c.id}>{c.name}</option>,
-                  ...(c.children || []).map((child) => (
-                    <option key={child.id} value={child.id}>
-                      ― {child.name}
-                    </option>
-                  )),
+                style={{ minWidth: 180 }}
+                options={tree.flatMap((c) => [
+                  { value: c.id, label: c.name },
+                  ...(c.children || []).map((child) => ({ value: child.id, label: `― ${child.name}` })),
                 ])}
-              </select>
-              <button onClick={handleCreate} disabled={createLoading} className="admin-cat-btn save">
-                {createLoading ? 'Creating...' : 'Create'}
-              </button>
+              />
+              <Button type="primary" onClick={handleCreate} loading={createLoading} className="admin-cat-btn save">
+                Create
+              </Button>
             </div>
           </motion.div>
         )}

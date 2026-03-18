@@ -7,12 +7,114 @@
 .top-nav {
   position: fixed;
   top: 24px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   z-index: 1000;
   display: flex;
+  align-items: center;
   justify-content: center;
   pointer-events: none;
+  padding: 0 24px;
+}
+
+.top-nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.top-nav-account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.top-nav-customer-name {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.top-nav-orders-link,
+.top-nav-login-link {
+  font-size: 13px;
+}
+
+.top-nav-logout-btn {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.top-nav-logout-btn:hover {
+  color: #fff;
+}
+
+.top-nav--scrolled .top-nav-customer-name,
+.top-nav--scrolled .top-nav-logout-btn {
+  color: var(--text-muted);
+}
+
+.top-nav--scrolled .top-nav-logout-btn:hover {
+  color: var(--primary);
+}
+
+.top-nav-cart-icon {
+  position: fixed;
+  right: 24px;
+  top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.95);
+  transition: all 0.25s;
+  pointer-events: auto;
+}
+
+.top-nav-cart-icon:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.top-nav--scrolled .top-nav-cart-icon {
+  background: rgba(255, 255, 255, 0.97);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: var(--text);
+}
+
+.top-nav--scrolled .top-nav-cart-icon:hover {
+  color: var(--primary);
+}
+
+.top-nav-cart-icon .top-nav-cart-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .top-nav-pill {
@@ -90,12 +192,6 @@
 
 .top-nav--scrolled .top-nav-link.active::after {
   background: var(--primary);
-}
-
-.top-nav-cart {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .top-nav-cart-badge {

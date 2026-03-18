@@ -31,7 +31,7 @@ async function getDescendantCategoryIds(storeId, categoryId) {
   return Array.from(ids);
 }
 
-async function listProductsForStore(storeId, { categoryId } = {}) {
+async function listProductsForStore(storeId, { categoryId, page = 1, limit = 40 } = {}) {
   const where = { storeId };
 
   if (categoryId) {
@@ -39,10 +39,23 @@ async function listProductsForStore(storeId, { categoryId } = {}) {
     where.categoryId = { in: categoryIds };
   }
 
-  return prisma.product.findMany({
-    where,
-    include: { category: true }
-  });
+  const [products, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      include: { category: true },
+      skip: (page - 1) * limit,
+      take: limit
+    }),
+    prisma.product.count({ where })
+  ]);
+
+  return {
+    products,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit)
+  };
 }
 
 async function createProductForStore(storeId, payload) {

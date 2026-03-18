@@ -94,6 +94,21 @@
   color: var(--primary);
 }
 
+.product-detail-stock-status {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.product-detail-stock-status--out {
+  color: #cf1322;
+}
+
+.product-detail-stock-status--low {
+  color: #d46b08;
+}
+
 .product-detail-colors h3,
 .product-detail-quantity h3 {
   font-family: 'Outfit', sans-serif;

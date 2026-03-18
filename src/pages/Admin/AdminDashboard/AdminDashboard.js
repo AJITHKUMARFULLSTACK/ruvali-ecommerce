@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { apiBaseUrl } from '../../../lib/apiClient';
 import './AdminDashboard.css';
 
@@ -52,50 +53,74 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="admin-dashboard">
+    <motion.div
+      className="admin-dashboard"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.35 }}
+    >
       <div className="admin-dashboard-inner">
-        <div className="admin-header">
+        <motion.div
+          className="admin-header"
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
           <h1>Dashboard</h1>
-        </div>
+        </motion.div>
 
         <div className="admin-stats-grid">
-          <div className="stat-card">
-            <h3>Total Orders</h3>
-            <p className="stat-value">{stats.totalOrders}</p>
-          </div>
-          <div className="stat-card">
-            <h3>Total Revenue</h3>
-            <p className="stat-value">₹{stats.totalRevenue.toLocaleString('en-IN')}</p>
-          </div>
-          <div className="stat-card">
-            <h3>Pending Orders</h3>
-            <p className="stat-value">{stats.pendingCount}</p>
-          </div>
-          <div className="stat-card">
-            <h3>Completed Orders</h3>
-            <p className="stat-value">{stats.deliveredCount}</p>
-          </div>
+          {[
+            { label: 'Total Orders', value: stats.totalOrders },
+            { label: 'Total Revenue', value: `₹${stats.totalRevenue.toLocaleString('en-IN')}` },
+            { label: 'Pending Orders', value: stats.pendingCount },
+            { label: 'Completed Orders', value: stats.deliveredCount },
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              className="stat-card"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 + i * 0.06, duration: 0.4 }}
+              whileHover={{ y: -2, transition: { duration: 0.2 } }}
+            >
+              <h3>{stat.label}</h3>
+              <p className="stat-value">{stat.value}</p>
+            </motion.div>
+          ))}
         </div>
 
-        <div className="admin-quick-actions">
+        <motion.div
+          className="admin-quick-actions"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
           <h2>Quick Actions</h2>
           <div className="actions-grid">
-            <button onClick={() => navigate('/admin/products/new')} className="action-btn">
-              Add New Product
-            </button>
-            <button onClick={() => navigate('/admin/orders')} className="action-btn">
-              View Orders
-            </button>
-            <button onClick={() => navigate('/admin/settings')} className="action-btn">
-              Update Theme Colors
-            </button>
-            <button onClick={() => navigate('/admin/categories')} className="action-btn">
-              Manage Categories
-            </button>
+            {[
+              { label: 'Add New Product', path: '/admin/products/new' },
+              { label: 'View Orders', path: '/admin/orders' },
+              { label: 'Update Theme Colors', path: '/admin/settings' },
+              { label: 'Manage Categories', path: '/admin/categories' },
+            ].map((action, i) => (
+              <motion.button
+                key={action.path}
+                onClick={() => navigate(action.path)}
+                className="action-btn"
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 + i * 0.05 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {action.label}
+              </motion.button>
+            ))}
           </div>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

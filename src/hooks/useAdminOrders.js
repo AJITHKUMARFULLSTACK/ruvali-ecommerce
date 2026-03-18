@@ -6,16 +6,26 @@ function getAuthHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-export function useAdminOrders() {
+export function useAdminOrders({ page = 1, limit = 20 } = {}) {
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ['adminOrders'],
+    queryKey: ['adminOrders', page, limit],
     queryFn: async () => {
-      const data = await apiGet('/api/orders', {
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+      const data = await apiGet(`/api/orders?${params.toString()}`, {
         headers: getAuthHeaders(),
       });
-      return Array.isArray(data) ? data : [];
+
+      if (Array.isArray(data)) {
+        return { orders: data, total: data.length, page: 1, totalPages: 1 };
+      }
+      return {
+        orders: data.orders ?? [],
+        total: data.total ?? 0,
+        page: data.page ?? 1,
+        totalPages: data.totalPages ?? 1
+      };
     },
     staleTime: 1000 * 30,
   });

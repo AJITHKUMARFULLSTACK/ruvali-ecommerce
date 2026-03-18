@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { Modal, Button, InputNumber } from 'antd';
 import { useCart } from '../../context/CartContext';
 import { resolveImageUrl } from '../../lib/imageUtils';
+import { toast } from '../../lib/toast';
 import './ProductDetail.css';
 
 const ProductDetail = ({ product, isOpen, onClose, onBuyNow }) => {
@@ -12,6 +14,7 @@ const ProductDetail = ({ product, isOpen, onClose, onBuyNow }) => {
 
   const handleAddToCart = () => {
     addToCart(product, quantity);
+    toast.success('Added to cart!');
     onClose();
   };
 
@@ -38,12 +41,21 @@ const ProductDetail = ({ product, isOpen, onClose, onBuyNow }) => {
   const priceNumber =
     typeof product.price === 'number' ? product.price : Number(product.price || 0);
 
+  const stock = product.stock ?? 0;
+  const isOutOfStock = stock === 0;
+  const isLowStock = stock > 0 && stock <= 5;
+
   return (
-    <div className="product-detail-overlay" onClick={onClose}>
-      <div className="product-detail-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="product-detail-close" onClick={onClose}>×</button>
-        
-        <div className="product-detail-content">
+    <Modal
+      open={isOpen}
+      onCancel={onClose}
+      footer={null}
+      closable
+      width={720}
+      className="product-detail-modal-antd"
+      destroyOnClose
+    >
+      <div className="product-detail-content">
           <div className="product-detail-image-section">
             <img 
               src={imageUrl}
@@ -60,6 +72,13 @@ const ProductDetail = ({ product, isOpen, onClose, onBuyNow }) => {
             <div className="product-detail-price">
               ₹{priceNumber.toLocaleString('en-IN')}
             </div>
+
+            {isOutOfStock && (
+              <p className="product-detail-stock-status product-detail-stock-status--out">Out of stock</p>
+            )}
+            {isLowStock && !isOutOfStock && (
+              <p className="product-detail-stock-status product-detail-stock-status--low">Only {stock} left</p>
+            )}
 
             {product.colors && product.colors.length > 0 && (
               <div className="product-detail-colors">
@@ -80,25 +99,28 @@ const ProductDetail = ({ product, isOpen, onClose, onBuyNow }) => {
 
             <div className="product-detail-quantity">
               <h3>Quantity</h3>
-              <div className="quantity-controls">
-                <button onClick={() => handleQuantityChange(-1)}>-</button>
-                <span>{quantity}</span>
-                <button onClick={() => handleQuantityChange(1)}>+</button>
-              </div>
+              <InputNumber
+                min={1}
+                max={isOutOfStock ? 0 : stock}
+                value={quantity}
+                onChange={(v) => setQuantity(v ?? 1)}
+                size="large"
+                className="product-detail-qty-input"
+                disabled={isOutOfStock}
+              />
             </div>
 
             <div className="product-detail-actions">
-              <button className="btn-add-to-cart" onClick={handleAddToCart}>
+              <Button type="primary" size="large" block className="btn-add-to-cart" onClick={handleAddToCart} disabled={isOutOfStock}>
                 Add to Cart
-              </button>
-              <button className="btn-buy-now" onClick={handleBuyNow}>
+              </Button>
+              <Button size="large" block className="btn-buy-now" onClick={handleBuyNow} disabled={isOutOfStock}>
                 Buy Now
-              </button>
+              </Button>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };
 

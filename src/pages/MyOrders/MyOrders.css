@@ -1,0 +1,84 @@
+.my-orders-page {
+  min-height: 60vh;
+  padding: 48px 24px;
+}
+
+.my-orders-container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.my-orders-container h1 {
+  margin: 0 0 24px;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.my-orders-login-prompt {
+  color: var(--text-muted);
+}
+
+.my-orders-login-prompt a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.my-orders-empty,
+.my-orders-error {
+  color: var(--text-muted);
+}
+
+.my-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.my-order-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.my-order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.my-order-header h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.my-order-header p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.my-order-status-badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.my-order-items {
+  margin-bottom: 12px;
+}
+
+.my-order-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.my-order-total {
+  font-weight: 600;
+}

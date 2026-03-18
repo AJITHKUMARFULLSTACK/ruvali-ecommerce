@@ -1,42 +1,111 @@
-const { getTwilioClient, isTwilioConfigured } = require('../config/twilio');
+const { Client, LocalAuth } = require('whatsapp-web.js');
 const { env } = require('../config/env');
 
-/**
- * Send WhatsApp message via Twilio if configured.
- * If not configured, we "mock send" and return a fake message id.
- */
-async function sendWhatsAppMessage({ toPhoneE164, body }) {
-  // Twilio WhatsApp requires prefix whatsapp:+E164
-  const to = toPhoneE164.startsWith('whatsapp:') ? toPhoneE164 : `whatsapp:${toPhoneE164}`;
+let client = null;
+let isReady = false;
+let isInitializing = false;
+let lastQr = null;
+let qrListeners = new Set();
 
-  if (!isTwilioConfigured()) {
-    // Mock mode (dev-friendly)
-    // eslint-disable-next-line no-console
-    console.log('[WHATSAPP] Twilio not configured, running in MOCK mode', {
-      to,
-      from: env.twilio.whatsappFrom,
-      hasAccountSid: Boolean(env.twilio.accountSid),
-      hasAuthToken: Boolean(env.twilio.authToken)
-    });
-    const fakeSid = `MOCK_${Date.now()}`;
-    // eslint-disable-next-line no-console
-    console.log('[WHATSAPP:MOCK]', { to, from: env.twilio.whatsappFrom, body, sid: fakeSid });
-    return { sid: fakeSid, status: 'mocked' };
-  }
+function initWhatsApp() {
+  if (!env.whatsapp.enabled) return;
+  if (isInitializing || isReady) return;
 
-  const client = getTwilioClient();
-  const msg = await client.messages.create({
-    from: env.twilio.whatsappFrom,
-    to,
-    body
+  isInitializing = true;
+  lastQr = null;
+
+  client = new Client({
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    }
   });
 
-  return { sid: msg.sid, status: msg.status };
+  client.on('qr', (qr) => {
+    lastQr = qr;
+    isReady = false;
+    qrListeners.forEach((res) => {
+      res.write(`data: ${JSON.stringify({ type: 'qr', qr })}\n\n`);
+    });
+  });
+
+  client.on('ready', () => {
+    isReady = true;
+    isInitializing = false;
+    lastQr = null;
+    // eslint-disable-next-line no-console
+    console.log('[WhatsApp] Connected and ready');
+    qrListeners.forEach((res) => {
+      res.write(`data: ${JSON.stringify({ type: 'ready' })}\n\n`);
+    });
+    qrListeners.clear();
+  });
+
+  client.on('auth_failure', () => {
+    isReady = false;
+    isInitializing = false;
+    lastQr = null;
+    // eslint-disable-next-line no-console
+    console.error('[WhatsApp] Auth failed');
+  });
+
+  client.on('disconnected', () => {
+    isReady = false;
+    isInitializing = false;
+    lastQr = null;
+    // eslint-disable-next-line no-console
+    console.warn('[WhatsApp] Disconnected');
+    setTimeout(() => initWhatsApp(), 10000);
+  });
+
+  client.initialize();
 }
 
-function buildOrderStatusMessage({ customerName, orderId, status, storeName }) {
-  return `Hello ${customerName}, your order #${orderId} is now ${status}. Thank you for shopping with ${storeName}.`;
+function addQrListener(res) {
+  qrListeners.add(res);
+  if (lastQr) {
+    res.write(`data: ${JSON.stringify({ type: 'qr', qr: lastQr })}\n\n`);
+  }
+  if (isReady) {
+    res.write(`data: ${JSON.stringify({ type: 'ready' })}\n\n`);
+  }
+  return () => qrListeners.delete(res);
 }
 
-module.exports = { sendWhatsAppMessage, buildOrderStatusMessage };
+async function sendWhatsAppMessage(phone, message) {
+  if (!isReady) {
+    // eslint-disable-next-line no-console
+    console.log('[WhatsApp] not ready, skipping message');
+    return;
+  }
+  try {
+    let digits = String(phone || '').replace(/\D/g, '');
+    if (digits.length === 10 && !digits.startsWith('91')) {
+      digits = '91' + digits;
+    } else if (digits.startsWith('0')) {
+      digits = '91' + digits.slice(1);
+    }
+    const chatId = digits + '@c.us';
+    await client.sendMessage(chatId, message);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[WhatsApp] sendMessage error:', err.message);
+  }
+}
 
+function isWhatsAppReady() {
+  return isReady;
+}
+
+function getLastQr() {
+  return lastQr;
+}
+
+module.exports = {
+  initWhatsApp,
+  addQrListener,
+  sendWhatsAppMessage,
+  isWhatsAppReady,
+  getLastQr
+};

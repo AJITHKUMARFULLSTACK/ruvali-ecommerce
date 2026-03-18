@@ -1,13 +1,25 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { TOP_NAV_HEIGHT } from '../../components/TopNav/TopNav';
 import aboutImage from '../../Assets/Images/AboutUs.png';
 import './About.css';
 
 const About = () => {
   return (
-    <div className="about-page" style={{ paddingTop: TOP_NAV_HEIGHT }}>
+    <motion.div
+      className="about-page"
+      style={{ paddingTop: TOP_NAV_HEIGHT }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
       <div className="about-wrapper">
-        <div className="about-text-section">
+        <motion.div
+          className="about-text-section"
+          initial={{ opacity: 0, x: -24 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+        >
           <h1 className="about-title">ABOUT US</h1>
 
           <p className="about-paragraph">
@@ -34,15 +46,20 @@ const About = () => {
               every space you enter”.
             </p>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="about-image-section">
+        <motion.div
+          className="about-image-section"
+          initial={{ opacity: 0, x: 24 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
           <div className="about-image-oval">
             <img src={aboutImage} alt="RUVALI customer in the city" className="about-image" />
           </div>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

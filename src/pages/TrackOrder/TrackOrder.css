@@ -70,3 +70,76 @@
   color: #666;
   margin-top: 12px;
 }
+
+.track-result--error {
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+}
+
+.track-error-message {
+  color: #cf1322;
+  margin: 0;
+}
+
+.track-order-details {
+  margin-top: 16px;
+}
+
+.track-detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.track-detail-label {
+  font-weight: 600;
+  color: #333;
+}
+
+.track-detail-value {
+  color: #333;
+}
+
+.track-order-items {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+
+.track-order-items h3,
+.track-status-timeline h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.track-order-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.track-total {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+  font-weight: 600;
+}
+
+.track-status-timeline {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+
+.track-status-timeline ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.track-status-timeline li {
+  padding: 4px 0;
+  font-size: 14px;
+  color: #666;
+}

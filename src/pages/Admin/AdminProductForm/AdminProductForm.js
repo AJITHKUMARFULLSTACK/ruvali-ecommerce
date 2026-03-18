@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Form, Input, InputNumber, Select, Button } from 'antd';
 import { useAdminCategories } from '../../../hooks/useAdminCategories';
 import { apiGet, apiPut, apiPost, apiBaseUrl } from '../../../lib/apiClient';
 import { resolveImageUrl } from '../../../lib/imageUtils';
 import { buildCategoryTree } from '../../../hooks/useCategories';
+import { toast } from '../../../lib/toast';
 import './AdminProductForm.css';
 
 function getAuthHeaders() {
@@ -81,14 +83,17 @@ const AdminProductForm = () => {
       if (url) setFormData((prev) => ({ ...prev, image: url }));
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert(error.message || 'Error uploading image');
+      toast.error(error.message || 'Error uploading image');
     } finally {
       setUploading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    if (!formData.name || !formData.categoryId || formData.price === '' || formData.price == null) {
+      toast.error('Please fill required fields');
+      return;
+    }
     setLoading(true);
     try {
       const payload = {
@@ -110,7 +115,7 @@ const AdminProductForm = () => {
       }
       navigate('/admin/products');
     } catch (err) {
-      alert(err?.message || 'Error saving product');
+      toast.error(err?.message || 'Error saving product');
     } finally {
       setLoading(false);
     }
@@ -126,64 +131,51 @@ const AdminProductForm = () => {
     <div className="admin-product-form">
       <div className="form-header">
         <h1>{isEdit ? 'Edit Product' : 'Add New Product'}</h1>
-        <button onClick={() => navigate('/admin/products')} className="btn-secondary">
+        <Button onClick={() => navigate('/admin/products')} className="btn-secondary">
           Back to Products
-        </button>
+        </Button>
       </div>
 
-      <form onSubmit={handleSubmit} className="product-form">
+      <Form layout="vertical" onFinish={handleSubmit} className="product-form">
         <div className="form-section">
           <h2>Basic Information</h2>
-          
-          <div className="form-row">
-            <div className="form-group">
-              <label>Product Name *</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Category *</label>
-              <select
-                value={formData.categoryId}
-                onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                required
-              >
-                {flatCategories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat._indent ? `― ${cat.name}` : cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>Price (₹) *</label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
-                required
-                min="0"
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label>Description</label>
-            <textarea
+          <Form.Item label="Product Name" required>
+            <Input
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              size="large"
+              placeholder="Product name"
+            />
+          </Form.Item>
+          <Form.Item label="Category" required>
+            <Select
+              value={formData.categoryId}
+              onChange={(v) => setFormData({ ...formData, categoryId: v })}
+              size="large"
+              placeholder="Select category"
+              options={flatCategories.map((cat) => ({
+                value: cat.id,
+                label: cat._indent ? `― ${cat.name}` : cat.name,
+              }))}
+            />
+          </Form.Item>
+          <Form.Item label="Price (₹)" required>
+            <InputNumber
+              value={formData.price}
+              onChange={(v) => setFormData({ ...formData, price: v })}
+              min={0}
+              step={0.01}
+              style={{ width: '100%' }}
+              size="large"
+            />
+          </Form.Item>
+          <Form.Item label="Description">
+            <Input.TextArea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows="4"
+              rows={4}
             />
-          </div>
+          </Form.Item>
         </div>
 
         <div className="form-section">
@@ -204,26 +196,26 @@ const AdminProductForm = () => {
 
         <div className="form-section">
           <h2>Stock</h2>
-          <div className="form-group">
-            <label>Stock Quantity</label>
-            <input
-              type="number"
+          <Form.Item label="Stock Quantity">
+            <InputNumber
               value={formData.stock}
-              onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
-              min="0"
+              onChange={(v) => setFormData({ ...formData, stock: v ?? 0 })}
+              min={0}
+              style={{ width: '100%' }}
+              size="large"
             />
-          </div>
+          </Form.Item>
         </div>
 
         <div className="form-actions">
-          <button type="button" onClick={() => navigate('/admin/products')} className="btn-secondary">
+          <Button type="default" onClick={() => navigate('/admin/products')} className="btn-secondary">
             Cancel
-          </button>
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Saving...' : isEdit ? 'Update Product' : 'Create Product'}
-          </button>
+          </Button>
+          <Button type="primary" htmlType="submit" loading={loading} className="btn-primary">
+            {isEdit ? 'Update Product' : 'Create Product'}
+          </Button>
         </div>
-      </form>
+      </Form>
     </div>
   );
 };
