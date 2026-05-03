@@ -2,9 +2,9 @@
  * Backend origin only (scheme + host, optional port). Must NOT include `/api`.
  * Requests use paths like `/api/products` → `${API_BASE_URL}/api/products`.
  *
- * Production default (no REACT_APP_API_URL): Hostinger Node deployment.
+ * Production default (no REACT_APP_API_URL): backend API subdomain.
  */
-const DEFAULT_PRODUCTION_API = 'https://ruvali-co-in-924955.hostingersite.com';
+const DEFAULT_PRODUCTION_API = 'https://api.ruvali.co.in';
 const LOCAL_API = 'http://localhost:5005';
 
 function normalizeBase(url) {
