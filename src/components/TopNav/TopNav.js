@@ -102,7 +102,13 @@ const TopNav = () => {
 
         <div className="top-nav-right">
           <div className="top-nav-account">
-            <button className="top-nav-account-btn" type="button" onClick={handleAccountClick} aria-expanded={accountOpen}>
+            <button
+              className="top-nav-account-btn"
+              type="button"
+              onClick={handleAccountClick}
+              aria-expanded={accountOpen}
+              aria-label="Account menu"
+            >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
@@ -153,7 +159,10 @@ const TopNav = () => {
         </div>
       </div>
 
-      <div className={`top-nav-mobile ${mobileOpen ? 'top-nav-mobile--open' : ''}`} aria-hidden={!mobileOpen}>
+      <div
+        className={`top-nav-mobile ${mobileOpen ? 'top-nav-mobile--open' : ''}`}
+        hidden={!mobileOpen}
+      >
         <div className="top-nav-mobile-backdrop" onClick={() => setMobileOpen(false)} />
         <div className="top-nav-mobile-panel" role="dialog" aria-label="Mobile navigation">
           <button className="top-nav-mobile-close" type="button" aria-label="Close menu" onClick={() => setMobileOpen(false)}>

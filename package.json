@@ -18,11 +18,16 @@
     "start": "CI=true DISABLE_ESLINT_PLUGIN=true react-scripts start",
     "build": "CI=true DISABLE_ESLINT_PLUGIN=true GENERATE_SOURCEMAP=false react-scripts build",
     "serve": "npx serve -s build -l 3000",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --grep-invert @a11y",
+    "test:e2e:all": "playwright test",
+    "test:e2e:smoke": "playwright test tests/ruvali.smoke.spec.js --project=desktop-chromium",
+    "test:e2e:shell": "playwright test tests/public-pages.spec.js",
+    "test:e2e:a11y": "playwright test --grep @a11y",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@playwright/test": "^1.59.1",
     "@types/node": "^25.6.0",
     "autoprefixer": "^10.4.24",
