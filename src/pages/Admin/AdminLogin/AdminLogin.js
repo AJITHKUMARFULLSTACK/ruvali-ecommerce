@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Form, Input, Button } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { apiBaseUrl } from '../../../lib/apiClient';
+import { apiBaseUrl, publicApiHeaders } from '../../../lib/apiClient';
 import { toast } from '../../../lib/toast';
 import './AdminLogin.css';
 
@@ -17,7 +17,7 @@ const AdminLogin = () => {
     try {
       const response = await fetch(`${apiBaseUrl}/api/admin/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: publicApiHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ email: values.username, password: values.password }),
       });
       const data = await response.json();

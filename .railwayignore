@@ -1,3 +1,2 @@
-backend/
-saas-backend/
-backend-simple/
+# Monorepo: deploy root as the CRA storefront only (`npm run build`).
+# Backend lives separately: github.com/AJITHKUMARFULLSTACK/ruvali_backend.git

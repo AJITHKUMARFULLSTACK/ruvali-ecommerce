@@ -1,6 +1,8 @@
 # Ruvali E-commerce — Full Project Analysis Report
 
-**Date:** January 28, 2025  
+> **Note (2026):** This report described a **`saas-backend`** (Postgres/Prisma) tree that has been removed from this monoreclone. Operations use **`ruvali-backend`** and Hostinger MySQL. Sections below referencing **`saas-backend`** are historical unless updated manually.
+
+**Date:** January 28, 2025    
 **Scope:** Frontend + Backend (no changes made)
 
 ---

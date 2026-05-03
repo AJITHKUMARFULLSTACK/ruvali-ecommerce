@@ -5,6 +5,7 @@ import { useStore } from '../../context/StoreContext';
 import { useCustomer } from '../../context/CustomerContext';
 import logoImg from '../../Assets/Images/Logo.png';
 import landingBg from '../../Assets/Images/LandingBg.png';
+import { publicApiHeaders } from '../../lib/apiClient';
 import './CustomerLogin.css';
 
 const CustomerLogin = () => {
@@ -42,7 +43,7 @@ const CustomerLogin = () => {
         `${backendUrl}/api/customer/login?storeSlug=${encodeURIComponent(storeSlug)}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: publicApiHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ email: values.email, password: values.password })
         }
       );
@@ -76,7 +77,7 @@ const CustomerLogin = () => {
         `${backendUrl}/api/customer/register?storeSlug=${encodeURIComponent(storeSlug)}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: publicApiHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             name: values.name,
             email: values.email,

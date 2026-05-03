@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Form, Input, Button } from 'antd';
 import InfoPage from '../../components/InfoPage/InfoPage';
 import { useStore } from '../../context/StoreContext';
+import { publicApiHeaders } from '../../lib/apiClient';
 import './TrackOrder.css';
 
 const STATUS_LABELS = {
@@ -31,7 +32,9 @@ const TrackOrder = () => {
         orderId: values.orderId.trim().replace(/^#/, '').toLowerCase(),
         phone: values.phone.trim()
       });
-      const res = await fetch(`${backendUrl}/api/orders/track?${params.toString()}`);
+      const res = await fetch(`${backendUrl}/api/orders/track?${params.toString()}`, {
+        headers: publicApiHeaders(),
+      });
 
       if (!res.ok) {
         if (res.status === 404) {

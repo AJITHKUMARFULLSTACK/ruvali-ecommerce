@@ -1,52 +1,65 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Form, Input, InputNumber, Select, Button } from 'antd';
 import { useAdminCategories } from '../../../hooks/useAdminCategories';
-import { apiGet, apiPut, apiPost, apiBaseUrl } from '../../../lib/apiClient';
-import { resolveImageUrl } from '../../../lib/imageUtils';
+import { apiGet, apiPost, apiPatch } from '../../../lib/apiClient';
+import { resolveImageUrl, pickGalleryImageSrc } from '../../../lib/imageUtils';
 import { buildCategoryTree } from '../../../hooks/useCategories';
 import { toast } from '../../../lib/toast';
 import './AdminProductForm.css';
-
-function getAuthHeaders() {
-  const token = localStorage.getItem('adminToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
 
 const AdminProductForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = !!id;
-  
+
   const [formData, setFormData] = useState({
     name: '',
     categoryId: '',
     price: '',
-    image: '',
     description: '',
-    stock: 0
+    stock: 0,
   });
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  /** New file chosen in this session; uploaded on save */
+  const [pendingImageFile, setPendingImageFile] = useState(null);
+  /** Resolved URL for `<img src>` (server path, full URL, or blob) */
+  const [previewSrc, setPreviewSrc] = useState('');
+  const blobUrlRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const { data: categories = [] } = useAdminCategories();
+
+  const revokeBlobIfAny = () => {
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => revokeBlobIfAny();
+  }, []);
 
   useEffect(() => {
     if (!isEdit || !id) return;
     const fetchProduct = async () => {
       try {
-        const data = await apiGet(`/api/products/${id}`, {
-          headers: getAuthHeaders(),
-        });
-        const imageUrl = data.images?.length > 0 ? data.images[0] : '';
+        const data = await apiGet(`/api/products/${id}`);
+        const first = data.images?.length ? data.images[0] : null;
+        const imageStr =
+          typeof first === 'string' ? first : pickGalleryImageSrc(first);
+        revokeBlobIfAny();
+        setPendingImageFile(null);
         setFormData({
           name: data.name || '',
           categoryId: data.categoryId || '',
           price: Number(data.price) || '',
-          image: imageUrl,
           description: data.description || '',
           stock: data.stock ?? 0,
         });
+        setPreviewSrc(imageStr ? resolveImageUrl(imageStr) : '');
+        if (fileInputRef.current) fileInputRef.current.value = '';
       } catch (err) {
         console.error('Error fetching product:', err);
       }
@@ -61,32 +74,32 @@ const AdminProductForm = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categories, isEdit]);
 
-  const handleImageUpload = async (e) => {
+  const handleImageFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append('image', file);
-      const res = await fetch(`${apiBaseUrl}/api/upload/image`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: fd,
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        const msg = data?.error?.message || 'Upload failed';
-        throw new Error(msg);
-      }
-      const url = data.url;
-      if (url) setFormData((prev) => ({ ...prev, image: url }));
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error(error.message || 'Error uploading image');
-    } finally {
-      setUploading(false);
+    revokeBlobIfAny();
+    const objectUrl = URL.createObjectURL(file);
+    blobUrlRef.current = objectUrl;
+    setPendingImageFile(file);
+    setPreviewSrc(objectUrl);
+  };
+
+  const buildProductFormData = () => {
+    const fd = new FormData();
+    fd.append('name', (formData.name ?? '').toString().trim());
+    fd.append('categoryId', (formData.categoryId ?? '').toString().trim());
+    fd.append('price', String(formData.price ?? ''));
+    fd.append('stock', String(formData.stock ?? 0));
+    const desc =
+      formData.description === undefined || formData.description === ''
+        ? ''
+        : String(formData.description);
+    fd.append('description', desc);
+    if (pendingImageFile) {
+      fd.append('images', pendingImageFile);
     }
+    return fd;
   };
 
   const handleSubmit = async () => {
@@ -94,24 +107,13 @@ const AdminProductForm = () => {
       toast.error('Please fill required fields');
       return;
     }
+
     setLoading(true);
     try {
-      const payload = {
-        name: formData.name,
-        description: formData.description,
-        price: formData.price,
-        stock: formData.stock,
-        categoryId: formData.categoryId,
-        images: formData.image ? [formData.image] : [],
-      };
       if (isEdit) {
-        await apiPut(`/api/products/${id}`, payload, {
-          headers: getAuthHeaders(),
-        });
+        await apiPatch(`/api/products/${id}`, buildProductFormData());
       } else {
-        await apiPost('/api/products', payload, {
-          headers: getAuthHeaders(),
-        });
+        await apiPost('/api/products', buildProductFormData());
       }
       navigate('/admin/products');
     } catch (err) {
@@ -180,17 +182,22 @@ const AdminProductForm = () => {
 
         <div className="form-section">
           <h2>Product Image</h2>
+          <p style={{ opacity: 0.75, fontSize: 13, marginBottom: 12 }}>
+            {isEdit
+              ? 'Pick a file to add an image when you save. Existing images stay unless you replace them elsewhere.'
+              : 'Optional: choose image(s); upload happens when you create the product.'}
+          </p>
           <div className="image-upload">
-            {formData.image && (
-              <img src={resolveImageUrl(formData.image)} alt="Preview" className="image-preview" />
-            )}
+            {previewSrc ? (
+              <img src={previewSrc} alt="Preview" className="image-preview" />
+            ) : null}
             <input
+              ref={fileInputRef}
               type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              disabled={uploading}
+              accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+              onChange={handleImageFileChange}
+              disabled={loading}
             />
-            {uploading && <p>Uploading...</p>}
           </div>
         </div>
 

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Form, Input, Button, Row, Col } from 'antd';
 import { useCart } from '../../context/CartContext';
 import { useCustomer } from '../../context/CustomerContext';
-import { resolveImageUrl } from '../../lib/imageUtils';
+import { resolveImageUrl, getProductPrimaryImageSource } from '../../lib/imageUtils';
 import { TOP_NAV_HEIGHT } from '../../components/TopNav/TopNav';
 import './Checkout.css';
 
@@ -47,9 +47,11 @@ const Checkout = () => {
     navigate('/payment', { state: { orderData } });
   };
 
-  const rawImage = (item) =>
-    item.image ||
-    (Array.isArray(item.images) && item.images.length > 0 ? item.images[0] : null);
+  const rawImage = (item) => {
+    const flat = getProductPrimaryImageSource(item);
+    if (flat) return flat;
+    return item.image || null;
+  };
   const priceNum = (item) =>
     typeof item.price === 'number' ? item.price : Number(item.price || 0);
 

@@ -7,7 +7,7 @@ import React, {
 } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { apiGet, apiBaseUrl } from '../lib/apiClient';
+import { apiGet, apiBaseUrl, STORE_SLUG } from '../lib/apiClient';
 
 const StoreContext = createContext(null);
 
@@ -20,7 +20,7 @@ export const useStore = () => {
 };
 
 const BACKEND_URL = apiBaseUrl;
-const DEFAULT_STORE_SLUG = 'ruvali-demo';
+const DEFAULT_STORE_SLUG = STORE_SLUG;
 
 /** Darken hex color by amount (0-1) */
 function darkenHex(hex, amount = 0.15) {

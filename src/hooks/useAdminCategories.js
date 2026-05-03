@@ -1,28 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiGet, apiPost, apiPut, apiDelete, apiBaseUrl } from '../lib/apiClient';
-
-const getBackendUrl = () => apiBaseUrl || window.location.origin;
-
-function getAuthHeaders() {
-  const token = localStorage.getItem('adminToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-async function uploadCategoryBanner(categoryId, file) {
-  const formData = new FormData();
-  formData.append('banner', file);
-  const base = getBackendUrl();
-  const res = await fetch(`${base}/api/categories/${categoryId}/banner`, {
-    method: 'PUT',
-    headers: getAuthHeaders(),
-    body: formData,
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error?.message || err?.message || res.statusText);
-  }
-  return res.json();
-}
+import { apiGet, apiPost, apiPut, apiDelete } from '../lib/apiClient';
+import { putCategoryBanner } from '../lib/backendUploads';
 
 export function useAdminCategories() {
   const queryClient = useQueryClient();
@@ -30,9 +8,7 @@ export function useAdminCategories() {
   const query = useQuery({
     queryKey: ['adminCategories'],
     queryFn: async () => {
-      const data = await apiGet('/api/categories/admin', {
-        headers: getAuthHeaders(),
-      });
+      const data = await apiGet('/api/categories/admin');
       return Array.isArray(data) ? data : [];
     },
     staleTime: 1000 * 30,
@@ -40,9 +16,7 @@ export function useAdminCategories() {
 
   const createMutation = useMutation({
     mutationFn: async (payload) => {
-      return apiPost('/api/categories', payload, {
-        headers: getAuthHeaders(),
-      });
+      return apiPost('/api/categories', payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminCategories'] });
@@ -52,9 +26,7 @@ export function useAdminCategories() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...payload }) => {
-      return apiPut(`/api/categories/${id}`, payload, {
-        headers: getAuthHeaders(),
-      });
+      return apiPut(`/api/categories/${id}`, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminCategories'] });
@@ -64,9 +36,7 @@ export function useAdminCategories() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      await apiDelete(`/api/categories/${id}`, {
-        headers: getAuthHeaders(),
-      });
+      await apiDelete(`/api/categories/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminCategories'] });
@@ -75,7 +45,7 @@ export function useAdminCategories() {
   });
 
   const uploadBannerMutation = useMutation({
-    mutationFn: async ({ categoryId, file }) => uploadCategoryBanner(categoryId, file),
+    mutationFn: async ({ categoryId, file }) => putCategoryBanner(categoryId, file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminCategories'] });
       queryClient.invalidateQueries({ queryKey: ['categories'] });
@@ -84,20 +54,7 @@ export function useAdminCategories() {
 
   const reorderMutation = useMutation({
     mutationFn: async (order) => {
-      const base = getBackendUrl();
-      const res = await fetch(`${base}/api/categories/reorder`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders(),
-        },
-        body: JSON.stringify({ order }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error?.message || err?.message || res.statusText);
-      }
-      return res.json();
+      return apiPut('/api/categories/reorder', { order });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminCategories'] });

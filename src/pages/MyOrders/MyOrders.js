@@ -4,6 +4,7 @@ import { useStore } from '../../context/StoreContext';
 import { useCustomer } from '../../context/CustomerContext';
 import { TOP_NAV_HEIGHT } from '../../components/TopNav/TopNav';
 import ScrollReveal from '../../components/ScrollReveal/ScrollReveal';
+import { publicApiHeaders } from '../../lib/apiClient';
 import './MyOrders.css';
 
 const STATUS_LABELS = {
@@ -39,7 +40,7 @@ const MyOrders = () => {
         const res = await fetch(
           `${backendUrl}/api/customer/orders?storeSlug=${encodeURIComponent(storeSlug)}`,
           {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: publicApiHeaders({ Authorization: `Bearer ${token}` }),
           }
         );
         const data = await res.json();

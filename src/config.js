@@ -1,15 +1,10 @@
 /**
- * API Config
+ * Dev-only UI (e.g. test card banner on payment page).
+ * Backend URL is driven by REACT_APP_API_URL in src/lib/apiClient.js.
  *
- * isTesting = true  → localhost (http://localhost:5005)
- * isTesting = false → production (https://ruvali-ecommerce-1.onrender.com)
- *
- * Override: REACT_APP_IS_TESTING=true or false in .env
- * (If not set: dev = true, production build = false)
+ * Override: REACT_APP_SHOW_TEST_PAYMENT_BANNER=true|false
  */
-const envOverride = process.env.REACT_APP_IS_TESTING;
-
 export const isTesting =
-  typeof envOverride === 'string'
-    ? envOverride.toLowerCase() === 'true'
-    : process.env.NODE_ENV !== 'production';
+  process.env.REACT_APP_SHOW_TEST_PAYMENT_BANNER === 'true' ||
+  (process.env.NODE_ENV === 'development' &&
+    process.env.REACT_APP_SHOW_TEST_PAYMENT_BANNER !== 'false');

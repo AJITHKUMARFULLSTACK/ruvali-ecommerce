@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { resolveImageUrl } from '../../lib/imageUtils';
+import { resolveImageUrl, getProductPrimaryImageSource } from '../../lib/imageUtils';
 import './ProductCard.css';
 
 const FALLBACK_IMAGE =
@@ -24,9 +24,7 @@ const ProductCard = ({ product, onProductClick }) => {
     }
   };
 
-  const rawImage =
-    product.image ||
-    (Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : null);
+  const rawImage = getProductPrimaryImageSource(product);
   const imageUrl = rawImage
     ? resolveImageUrl(rawImage)
     : `https://api.lorem.space/image/fashion?w=400&h=400&hash=${product.id}${(product.name || '')

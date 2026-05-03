@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Button, InputNumber } from 'antd';
 import { useCart } from '../../context/CartContext';
-import { resolveImageUrl } from '../../lib/imageUtils';
+import { resolveImageUrl, getProductPrimaryImageSource } from '../../lib/imageUtils';
 import { toast } from '../../lib/toast';
 import './ProductDetail.css';
 
@@ -26,9 +26,7 @@ const ProductDetail = ({ product, isOpen, onClose, onBuyNow }) => {
     setQuantity((prev) => Math.max(1, prev + delta));
   };
 
-  const rawImage =
-    product.image ||
-    (Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : null);
+  const rawImage = getProductPrimaryImageSource(product);
   const imageUrl = rawImage
     ? resolveImageUrl(rawImage)
     : `https://api.lorem.space/image/fashion?w=600&h=600&hash=${product.id}`;

@@ -5,7 +5,7 @@ import { Button, Select, Modal } from 'antd';
 import { toast } from '../../../lib/toast';
 import { useAdminProducts } from '../../../hooks/useAdminProducts';
 import { useAdminCategories } from '../../../hooks/useAdminCategories';
-import { resolveImageUrl } from '../../../lib/imageUtils';
+import { resolveImageUrl, getProductPrimaryImageSource } from '../../../lib/imageUtils';
 import ProductCardSkeleton from '../../../components/ProductCardSkeleton/ProductCardSkeleton';
 import './AdminProducts.css';
 
@@ -74,12 +74,14 @@ const AdminProducts = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          {filteredProducts.map((product) => (
+          {filteredProducts.map((product) => {
+            const thumbSrc = getProductPrimaryImageSource(product);
+            return (
             <div key={product.id} className="admin-product-card">
               <img
                 src={
-                  product.images?.length > 0
-                    ? resolveImageUrl(product.images[0])
+                  thumbSrc
+                    ? resolveImageUrl(thumbSrc)
                     : 'https://via.placeholder.com/400x400?text=No+Image'
                 }
                 alt={product.name}
@@ -101,7 +103,8 @@ const AdminProducts = () => {
                 </div>
               </div>
             </div>
-          ))}
+          );
+          })}
         </motion.div>
       )}
     </div>

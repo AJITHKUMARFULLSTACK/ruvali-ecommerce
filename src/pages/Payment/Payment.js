@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 import { Form, Input, Button, Radio, Spin, Alert } from 'antd';
 import { useCart } from '../../context/CartContext';
 import { useStore } from '../../context/StoreContext';
-import { resolveImageUrl } from '../../lib/imageUtils';
+import { resolveImageUrl, getProductPrimaryImageSource } from '../../lib/imageUtils';
+import { publicApiHeaders } from '../../lib/apiClient';
 import { isTesting } from '../../config';
 import './Payment.css';
 
@@ -69,7 +70,7 @@ const Payment = () => {
           `${backendUrl}/api/orders?storeSlug=${encodeURIComponent(storeSlug)}`,
           {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: publicApiHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({
               customer,
               items: orderItems,
@@ -105,7 +106,7 @@ const Payment = () => {
         `${backendUrl}/api/orders/razorpay/create?storeSlug=${encodeURIComponent(storeSlug)}`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: publicApiHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ amount: totalWithShipping }),
         }
       );
@@ -144,7 +145,7 @@ const Payment = () => {
               `${backendUrl}/api/orders/razorpay/verify?storeSlug=${encodeURIComponent(storeSlug)}`,
               {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: publicApiHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({
                   razorpay_order_id: paymentResponse.razorpay_order_id,
                   razorpay_payment_id: paymentResponse.razorpay_payment_id,
@@ -228,11 +229,11 @@ const Payment = () => {
             <h2>Order Summary</h2>
             {orderData.items ? (
               orderData.items.map((item) => {
-                const img = item.product?.image || (item.product?.images?.[0]);
-                const price = typeof item.product?.price === 'number' ? item.product.price : Number(item.product?.price || 0);
+                const raw = getProductPrimaryImageSource(item.product);
+                const img = raw ? resolveImageUrl(raw) : '';
                 return (
                   <div key={item.productId} className="order-item">
-                    <img src={img ? resolveImageUrl(img) : ''} alt={item.product?.name} />
+                    <img src={img} alt={item.product?.name} />
                     <div>
                       <h3>{item.product?.name}</h3>
                       <p>Quantity: {item.quantity}</p>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button, Select, Pagination } from 'antd';
 import { toast } from '../../../lib/toast';
-import { resolveImageUrl } from '../../../lib/imageUtils';
+import { resolveImageUrl, getProductPrimaryImageSource } from '../../../lib/imageUtils';
 import { useAdminOrders } from '../../../hooks/useAdminOrders';
 import './AdminOrders.css';
 
@@ -156,7 +156,7 @@ const AdminOrders = () => {
                   {selectedOrder.items?.map((item, i) => (
                     <div key={i} className="admin-order-item">
                       <img
-                        src={resolveImageUrl(item.product?.images?.[0])}
+                        src={resolveImageUrl(getProductPrimaryImageSource(item.product))}
                         alt={item.product?.name}
                       />
                       <div>

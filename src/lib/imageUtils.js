@@ -1,27 +1,55 @@
 import { apiBaseUrl } from './apiClient';
 
-/**
- * Placeholder path when no image URL is available.
- * Ensure public/placeholder.svg exists (simple SVG: light gray bg, "No image" text).
- */
-const PLACEHOLDER_PATH = '/placeholder.svg';
+/** Local static asset via CRA PUBLIC_URL when set (e.g. subdirectory deploy). */
+function getPlaceholderPath() {
+  const pub = typeof process.env.PUBLIC_URL === 'string' ? process.env.PUBLIC_URL.trim() : '';
+  if (!pub) return '/placeholder.svg';
+  return `${pub.replace(/\/$/, '')}/placeholder.svg`;
+}
+
+const PLACEHOLDER_PATH = getPlaceholderPath();
+
+/** Raw item from backend gallery: `{ fullImageUrl, imageUrl }` or legacy string URL. */
+export function pickGalleryImageSrc(item) {
+  if (item == null) return '';
+  if (typeof item === 'string') return item.trim();
+  if (typeof item === 'object') {
+    const u = item.fullImageUrl || item.imageUrl || item.url || '';
+    return typeof u === 'string' ? u.trim() : '';
+  }
+  return '';
+}
+
+/** First storefront image URL for cards / thumbnails (prefers primary). */
+export function getProductPrimaryImageSource(product) {
+  if (!product) return '';
+  if (typeof product.image === 'string' && product.image.trim()) return product.image.trim();
+
+  const list = Array.isArray(product.images) ? product.images : [];
+  const primary =
+    list.find((i) => i && (i.isPrimary === true || Number(i.isPrimary) === 1)) || list[0];
+  return pickGalleryImageSrc(primary);
+}
 
 /**
  * Resolves image URLs for display.
- * 1. Full Cloudinary URL (https://res.cloudinary.com) → return as-is
- * 2. Full URL (http/https) → return as-is
- * 3. Relative path /uploads/xxx → prefix with backend API base URL
- * 4. Empty, null, undefined → return placeholder path
- * 5. Any other string → return as-is
- * Never returns undefined or empty string.
+ * Accepts strings or `{ fullImageUrl, imageUrl }` from product_images APIs.
+ *
+ * Full http(s) URLs pass through unchanged.
+ * Paths starting `/uploads/` are prefixed with the API base URL.
  */
-export function resolveImageUrl(url) {
-  if (url == null || typeof url !== 'string') return PLACEHOLDER_PATH;
-  const trimmed = url.trim();
+export function resolveImageUrl(urlOrObj) {
+  const raw =
+    typeof urlOrObj === 'object' && urlOrObj !== null ? pickGalleryImageSrc(urlOrObj) : urlOrObj;
+
+  if (raw == null || typeof raw !== 'string') return PLACEHOLDER_PATH;
+  const trimmed = raw.trim();
   if (!trimmed) return PLACEHOLDER_PATH;
+
   if (trimmed.startsWith('https://') || trimmed.startsWith('http://')) {
     return trimmed;
   }
+
   if (trimmed.startsWith('/uploads/')) {
     return `${apiBaseUrl}${encodeURI(trimmed.startsWith('/') ? trimmed : `/${trimmed}`)}`;
   }

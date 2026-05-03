@@ -3,7 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Input, Button, Alert } from 'antd';
 import { QRCodeSVG as QRCode } from 'qrcode.react';
-import { apiGet, apiPut, apiPost, apiBaseUrl } from '../../../lib/apiClient';
+import { apiGet, apiPut, apiPost, apiBaseUrl, buildApiHeaders } from '../../../lib/apiClient';
+import { uploadStoreBrandingImage } from '../../../lib/backendUploads';
 import { toast } from '../../../lib/toast';
 import { resolveImageUrl } from '../../../lib/imageUtils';
 import { applyStoreTheme } from '../../../context/StoreContext';
@@ -77,7 +78,7 @@ const AdminSettings = () => {
 
       const controller = new AbortController();
       const res = await fetch(`${apiBaseUrl}/api/admin/whatsapp/qr-stream`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: buildApiHeaders('/api/admin/whatsapp/qr-stream', 'GET', {}),
         signal: controller.signal,
       });
 
@@ -133,18 +134,14 @@ const AdminSettings = () => {
 
     const fetchStatus = async () => {
       try {
-        const data = await apiGet('/api/admin/whatsapp/status', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const data = await apiGet('/api/admin/whatsapp/status');
         if (cancelled) return;
         setWaStatus(data);
         setWaConnected(data.ready);
 
         if (data.enabled && !data.ready) {
           if (!data.hasQr) {
-            await apiPost('/api/admin/whatsapp/init', {}, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
+            await apiPost('/api/admin/whatsapp/init', {});
           }
           await startQrStream();
         }
@@ -170,13 +167,11 @@ const AdminSettings = () => {
     setWaInitMessage('Starting... please wait for QR code');
     setWaQr(null);
     try {
-      await apiPost('/api/admin/whatsapp/init', {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await apiPost('/api/admin/whatsapp/init', {});
       // The stream will deliver QR/ready if init succeeds
       const controller = new AbortController();
       const res = await fetch(`${apiBaseUrl}/api/admin/whatsapp/qr-stream`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: buildApiHeaders('/api/admin/whatsapp/qr-stream', 'GET', {}),
         signal: controller.signal,
       });
       if (!res.ok) {
@@ -237,16 +232,10 @@ const AdminSettings = () => {
 
   const updateMutation = useMutation({
     mutationFn: async (payload) => {
-      const token = localStorage.getItem('adminToken');
-      await apiPut('/api/store', payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await apiPut('/api/store', payload);
     },
     onSuccess: async () => {
-      const token = localStorage.getItem('adminToken');
-      await apiPost('/api/store/revalidate', {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await apiPost('/api/store/revalidate', {});
       queryClient.invalidateQueries({ queryKey: ['adminStore', slug] });
       queryClient.invalidateQueries({ queryKey: ['store', slug] });
     },
@@ -256,22 +245,12 @@ const AdminSettings = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append('image', file);
-
     try {
-      const token = localStorage.getItem('adminToken');
-      const res = await fetch(`${apiBaseUrl}/api/upload/image`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        const msg = data?.error?.message || 'Upload failed';
-        throw new Error(msg);
-      }
-      const url = data.url;
+      const data = await uploadStoreBrandingImage(file);
+      const url =
+        typeof data.url === 'string'
+          ? data.url
+          : data.imageUrl || data.fullImageUrl || '';
       if (url) setStore((s) => ({ ...s, [field]: url }));
     } catch (err) {
       console.error('Upload failed:', err);

@@ -7,6 +7,7 @@ import ScrollReveal from '../ScrollReveal/ScrollReveal';
 import { StaggerGrid, StaggerItem } from '../ScrollReveal/StaggerGrid';
 import './FeaturedPicks.css';
 import { useStore } from '../../context/StoreContext';
+import { apiGet } from '../../lib/apiClient';
 
 const FeaturedPicks = ({
   title,
@@ -14,7 +15,7 @@ const FeaturedPicks = ({
   categorySlug = 'c',
   onProductClick
 }) => {
-  const { storeSlug, backendUrl } = useStore();
+  const { storeSlug } = useStore();
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutData, setCheckoutData] = useState(null);
@@ -25,19 +26,16 @@ const FeaturedPicks = ({
       try {
         const params = new URLSearchParams({ storeSlug });
         if (categoryId) params.set('categoryId', categoryId);
-        const res = await fetch(
-          `${backendUrl}/api/products?${params.toString()}`
-        );
-        const data = await res.json();
-        if (!Array.isArray(data)) return;
-        setProducts(data.slice(0, 4));
+        const data = await apiGet(`/api/products?${params.toString()}`);
+        const list = Array.isArray(data) ? data : data?.products ?? [];
+        setProducts(list.slice(0, 4));
       } catch (err) {
         console.error('[FeaturedPicks] failed to fetch products', err);
       }
     };
 
     fetchFeatured();
-  }, [backendUrl, storeSlug, categoryId]);
+  }, [storeSlug, categoryId]);
 
   const handleProductClick = (product) => {
     if (onProductClick) {
