@@ -100,15 +100,56 @@ export function publicApiHeaders(extra = {}) {
   };
 }
 
+function responseBodyLooksLikeHtml(text) {
+  if (typeof text !== 'string') return false;
+  const t = text.trim();
+  return t.startsWith('<') && (t.startsWith('<!') || /^<html[\s>]/i.test(t));
+}
+
+const HTML_INSTEAD_OF_JSON = 'Server returned HTML instead of JSON. Check API URL.';
+
 async function handleResponse(res) {
-  const contentType = res.headers.get('content-type') || '';
-  const isJson = contentType.includes('application/json');
-  const data = isJson ? await res.json() : await res.text();
+  const raw = await res.text();
+  const ct = (res.headers.get('content-type') || '').toLowerCase();
+  const declaredJson = ct.includes('application/json');
+
+  let data;
+  if (declaredJson) {
+    if (responseBodyLooksLikeHtml(raw)) {
+      const error = new Error(HTML_INSTEAD_OF_JSON);
+      error.status = res.status;
+      error.data = raw;
+      throw error;
+    }
+    try {
+      data = raw ? JSON.parse(raw) : null;
+    } catch {
+      const error = new Error('Server returned malformed JSON. Check API URL.');
+      error.status = res.status;
+      error.data = raw;
+      throw error;
+    }
+  } else if (/^\s*[{\[]/.test(raw)) {
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      data = raw;
+    }
+  } else {
+    data = raw;
+  }
 
   if (!res.ok) {
-    const err = data?.error;
+    if (typeof data === 'string' && responseBodyLooksLikeHtml(data)) {
+      const error = new Error(HTML_INSTEAD_OF_JSON);
+      error.status = res.status;
+      error.data = data;
+      throw error;
+    }
+    const err = data && typeof data === 'object' ? data.error : null;
     const message =
       (err?.debug?.message || err?.message || data?.message) ||
+      (typeof data === 'string' && data ? data : null) ||
       res.statusText ||
       'Request failed';
     const error = new Error(message);
@@ -117,8 +158,18 @@ async function handleResponse(res) {
     throw error;
   }
 
+  if (typeof data === 'string' && responseBodyLooksLikeHtml(data)) {
+    const error = new Error(HTML_INSTEAD_OF_JSON);
+    error.status = res.status;
+    error.data = data;
+    throw error;
+  }
+
   return data;
 }
+
+/** Admin auth: POST JSON { email, password } */
+export const ADMIN_LOGIN_PATH = '/api/admin/login';
 
 export async function apiGet(path, options = {}) {
   const { headers: optionHeaders = {}, ...restOptions } = options;

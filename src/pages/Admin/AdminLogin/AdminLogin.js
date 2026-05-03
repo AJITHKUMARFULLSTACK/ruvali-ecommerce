@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Form, Input, Button } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { apiBaseUrl, publicApiHeaders } from '../../../lib/apiClient';
+import { apiPost, ADMIN_LOGIN_PATH, getApiBaseUrl } from '../../../lib/apiClient';
 import { toast } from '../../../lib/toast';
 import './AdminLogin.css';
 
@@ -15,14 +15,17 @@ const AdminLogin = () => {
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      const response = await fetch(`${apiBaseUrl}/api/admin/login`, {
-        method: 'POST',
-        headers: publicApiHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ email: values.username, password: values.password }),
-      });
-      const data = await response.json();
+      const base = getApiBaseUrl();
+      const loginUrl = `${base}${ADMIN_LOGIN_PATH}`;
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.debug('[AdminLogin] POST', loginUrl);
+      }
 
-      if (!response.ok) throw new Error(data.message || 'Login failed');
+      const data = await apiPost(ADMIN_LOGIN_PATH, {
+        email: (values.email || '').trim(),
+        password: values.password,
+      });
 
       localStorage.setItem('adminToken', data.token);
       localStorage.setItem('admin', JSON.stringify(data.admin));
@@ -30,7 +33,7 @@ const AdminLogin = () => {
       toast.success('Welcome back!');
       navigate('/admin/dashboard');
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -61,16 +64,23 @@ const AdminLogin = () => {
             className="admin-login-form"
           >
             <Form.Item
-              name="username"
-              rules={[{ required: true, message: 'Please enter your username' }]}
+              name="email"
+              rules={[
+                { required: true, message: 'Please enter your email' },
+                { type: 'email', message: 'Please enter a valid email' },
+              ]}
             >
-              <Input prefix={<UserOutlined />} placeholder="Username" autoFocus />
+              <Input prefix={<UserOutlined />} placeholder="Email" autoFocus autoComplete="email" />
             </Form.Item>
             <Form.Item
               name="password"
               rules={[{ required: true, message: 'Please enter your password' }]}
             >
-              <Input.Password prefix={<LockOutlined />} placeholder="Password" />
+              <Input.Password
+                prefix={<LockOutlined />}
+                placeholder="Password"
+                autoComplete="current-password"
+              />
             </Form.Item>
             <Form.Item>
               <Button type="primary" htmlType="submit" loading={loading} block className="admin-login-btn">
