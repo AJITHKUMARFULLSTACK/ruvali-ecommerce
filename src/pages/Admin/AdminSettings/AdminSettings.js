@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Input, Button, Alert } from 'antd';
 import { QRCodeSVG as QRCode } from 'qrcode.react';
 import { apiGet, apiPut, apiPost, fetchApi, getAdminToken } from '../../../lib/apiClient';
+import { consumeWhatsAppSse, backoffBeforeRetry } from '../../../lib/whatsappSseReader';
 import { uploadStoreBrandingImage } from '../../../lib/backendUploads';
 import { toast } from '../../../lib/toast';
 import { resolveImageUrl } from '../../../lib/imageUtils';
@@ -21,7 +22,10 @@ const AdminSettings = () => {
   const [waConnected, setWaConnected] = useState(false);
   const [waStreamError, setWaStreamError] = useState(null);
   const [waInitMessage, setWaInitMessage] = useState(null);
+  const [waInitBusy, setWaInitBusy] = useState(false);
+  const [waStreamHint, setWaStreamHint] = useState('');
   const qrStreamAbortRef = useRef(null);
+  const waOpsRef = useRef({});
 
   const adminStore = (() => {
     try {
@@ -55,189 +59,187 @@ const AdminSettings = () => {
     setLoading(!slug || isLoading);
   }, [storeData, slug, isLoading]);
 
-  /* Live preview: apply theme whenever local store changes */
+  /* Live preview */
   useEffect(() => {
     if (store) applyStoreTheme(store);
   }, [store]);
 
-  /* WhatsApp status and QR stream */
-  useEffect(() => {
-    const token = getAdminToken();
-    if (!token) return;
+  waOpsRef.current.stopStream = () => {
+    qrStreamAbortRef.current?.();
+    qrStreamAbortRef.current = null;
+  };
 
-    let cancelled = false;
+  waOpsRef.current.subscribeStream = async () => {
+    waOpsRef.current.stopStream();
+    setWaStreamError(null);
 
-    const stopQrStream = () => {
-      qrStreamAbortRef.current?.();
-      qrStreamAbortRef.current = null;
-    };
+    const tokenPresent = Boolean(getAdminToken());
+    // eslint-disable-next-line no-console
+    console.log('[WhatsApp][FE] token present:', tokenPresent);
+    if (!tokenPresent) return;
 
-    const startQrStream = async () => {
-      stopQrStream();
-      setWaStreamError(null);
-
-      const waToken = getAdminToken();
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      if (attempt > 0) {
+        setWaStreamHint(`Reconnecting... (${attempt + 1}/3)`);
+        await backoffBeforeRetry(attempt - 1);
+      }
 
       const controller = new AbortController();
-      const res = await fetchApi('/api/admin/whatsapp/qr-stream', {
-        signal: controller.signal,
-        headers:
-          waToken != null ? { Authorization: `Bearer ${waToken}` } : {},
-      });
+      const token = getAdminToken();
+      let res;
+      try {
+        res = await fetchApi('/api/admin/whatsapp/qr-stream', {
+          signal: controller.signal,
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error('[WhatsApp][FE] stream fetch error', e.message);
+        continue;
+      }
 
-      if (res.status === 401) {
-        return;
-      }
-      if (!res.ok) {
-        console.error('[WhatsApp] qr-stream non-200:', res.status, res.statusText);
-        setWaStreamError('Could not open WhatsApp QR stream. Please try initializing again.');
-        return;
-      }
+      if (res.status === 401) return;
+      if (!res.ok) continue;
 
       const reader = res.body?.getReader?.();
-      if (!reader) {
-        console.error('[WhatsApp] qr-stream missing readable body');
-        setWaStreamError('Could not read WhatsApp QR stream. Please try again.');
-        return;
-      }
+      if (!reader) continue;
 
       qrStreamAbortRef.current = () => {
         try {
           controller.abort();
-        } catch {}
+        } catch {
+          /* ignore */
+        }
         try {
           reader.cancel();
-        } catch {}
+        } catch {
+          /* ignore */
+        }
       };
 
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done || cancelled) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          try {
-            const payload = JSON.parse(line.slice(6));
-            console.log('[WhatsApp] SSE event:', payload?.type);
-            if (payload.type === 'qr') setWaQr(payload.qr);
-            if (payload.type === 'ready') {
+      let streamEnded = false;
+      try {
+        await consumeWhatsAppSse(reader, controller.signal, {
+          onQr: (qr) => {
+            // eslint-disable-next-line no-console
+            console.log('[WhatsApp][FE] stream qr');
+            setWaQr(qr);
+            setWaStreamHint('');
+          },
+          onStatus: (status) => {
+            // eslint-disable-next-line no-console
+            console.log('[WhatsApp][FE] stream status', status);
+            if (status === 'connected') {
               setWaConnected(true);
               setWaQr(null);
               setWaInitMessage(null);
+              setWaStreamHint('');
             }
-          } catch (e) {
-            // heartbeat or non-JSON line, ignore
-          }
+            if (status === 'disconnected') {
+              setWaConnected(false);
+              setWaStreamHint('Reconnecting...');
+            }
+            if (status === 'qr_expired') {
+              setWaStreamHint('QR expired — refreshing session...');
+              setTimeout(async () => {
+                try {
+                  await apiPost('/api/admin/whatsapp/init', {});
+                } catch (err) {
+                  toast.error(err.message || 'Could not refresh QR');
+                }
+              }, 650);
+            }
+          },
+          onError: (msg) => toast.error(msg),
+          onStreamEnd: () => {
+            streamEnded = true;
+          },
+        });
+      } catch (e) {
+        streamEnded = true;
+        // eslint-disable-next-line no-console
+        console.error('[WhatsApp][FE] SSE read ended', e?.message || e);
+      }
+
+      if (streamEnded && !controller.signal.aborted) {
+        setWaStreamHint('Server restarted, reconnecting WhatsApp...');
+        try {
+          await apiPost('/api/admin/whatsapp/init', {});
+        } catch {
+          /* ignore */
         }
       }
-    };
 
-    const fetchStatus = async () => {
+      return;
+    }
+
+    setWaStreamError('Could not open WhatsApp stream after retries.');
+  };
+
+  /* WhatsApp: status + SSE (retries / reconnect hints) */
+  useEffect(() => {
+    const token = getAdminToken();
+    if (!token) return undefined;
+
+    let cancelled = false;
+
+    (async () => {
       try {
         const data = await apiGet('/api/admin/whatsapp/status');
         if (cancelled) return;
         setWaStatus(data);
         setWaConnected(data.ready);
 
-        if (data.enabled && !data.ready) {
-          if (!data.hasQr) {
+        if (!data.enabled || data.ready) return;
+
+        if (!data.hasQr && !data.initializing) {
+          setWaInitBusy(true);
+          try {
             await apiPost('/api/admin/whatsapp/init', {});
+          } catch (e) {
+            toast.error(e.message || 'WhatsApp init failed');
+          } finally {
+            setWaInitBusy(false);
           }
-          await startQrStream();
         }
+
+        await waOpsRef.current.subscribeStream();
       } catch (err) {
         if (!cancelled) {
-          console.error('[WhatsApp] status/stream error:', err);
-          setWaStreamError('Could not load WhatsApp status. Please refresh and try again.');
+          // eslint-disable-next-line no-console
+          console.error('[WhatsApp][FE] bootstrap error:', err?.message || err);
+          setWaStreamError('Could not load WhatsApp status.');
         }
       }
-    };
+    })();
 
-    fetchStatus();
     return () => {
       cancelled = true;
-      stopQrStream();
+      waOpsRef.current.stopStream();
     };
   }, []);
 
   const handleInitWhatsApp = async () => {
     const token = getAdminToken();
     if (!token) return;
+    if (waInitBusy || waStatus?.initializing) return;
+
     setWaStreamError(null);
-    setWaInitMessage('Starting... please wait for QR code');
+    setWaInitMessage('Initializing...');
     setWaQr(null);
+    setWaInitBusy(true);
+
     try {
       await apiPost('/api/admin/whatsapp/init', {});
-      // The stream will deliver QR/ready if init succeeds
-      const controller = new AbortController();
-      const res = await fetchApi('/api/admin/whatsapp/qr-stream', {
-        signal: controller.signal,
-        headers:
-          token != null ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (res.status === 401) {
-        return;
-      }
-      if (!res.ok) {
-        console.error('[WhatsApp] qr-stream non-200 after init:', res.status, res.statusText);
-        setWaStreamError('Could not open WhatsApp QR stream. Please try again.');
-        setWaInitMessage(null);
-        return;
-      }
-
-      const reader = res.body?.getReader?.();
-      if (!reader) {
-        console.error('[WhatsApp] qr-stream missing readable body after init');
-        setWaStreamError('Could not read WhatsApp QR stream. Please try again.');
-        setWaInitMessage(null);
-        return;
-      }
-
-      qrStreamAbortRef.current?.();
-      qrStreamAbortRef.current = () => {
-        try {
-          controller.abort();
-        } catch {}
-        try {
-          reader.cancel();
-        } catch {}
-      };
-
-      const decoder = new TextDecoder();
-      let buffer = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          try {
-            const payload = JSON.parse(line.slice(6));
-            console.log('[WhatsApp] SSE event:', payload?.type);
-            if (payload.type === 'qr') setWaQr(payload.qr);
-            if (payload.type === 'ready') {
-              setWaConnected(true);
-              setWaQr(null);
-              setWaInitMessage(null);
-            }
-          } catch (e) {
-            // heartbeat or non-JSON line, ignore
-          }
-        }
-      }
     } catch (err) {
-      console.error('[WhatsApp] init failed:', err);
-      setWaStreamError('Failed to initialize WhatsApp. Please try again.');
+      toast.error(err.message || 'Initialization failed');
       setWaInitMessage(null);
+      return;
+    } finally {
+      setWaInitBusy(false);
     }
+
+    await waOpsRef.current.subscribeStream();
   };
 
   const updateMutation = useMutation({
@@ -479,6 +481,9 @@ const AdminSettings = () => {
                 Set WHATSAPP_ENABLED=true in your server environment and restart to enable.
               </div>
             )}
+            {waStreamHint ? (
+              <Alert type="info" message={waStreamHint} showIcon style={{ marginTop: 12 }} />
+            ) : null}
             {waStreamError && (
               <Alert type="error" message={waStreamError} showIcon style={{ marginTop: 12 }} />
             )}
@@ -489,7 +494,12 @@ const AdminSettings = () => {
             )}
             {waStatus?.enabled && !waConnected && !waStatus?.ready && (
               <div style={{ marginTop: 12 }}>
-                <Button onClick={handleInitWhatsApp} type="primary">
+                <Button
+                  onClick={handleInitWhatsApp}
+                  type="primary"
+                  disabled={waInitBusy || !!waStatus?.initializing}
+                  loading={waInitBusy}
+                >
                   Initialize WhatsApp
                 </Button>
                 {waInitMessage && (
