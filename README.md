@@ -89,8 +89,8 @@ ruvali-ecommerce/
 
 ## API & deployment
 
-- Copy **`.env.example`** to **`.env.local`**. **`REACT_APP_API_URL`** is the origin only (**`https://ruvali.co.in`**), **not** `…/api` — callers use **`/api/...`** paths.
-- Optional: **`REACT_APP_USE_LOCAL_API=true`** to use **`http://localhost:5005`** during local **`ruvali-backend`** development (see CRA **`package.json`** **`proxy`**).
+- Copy **`.env.example`** to **`.env.local`**. **`REACT_APP_API_URL`** is the backend origin only (default in code: **`https://ruvali-co-in-924955.hostingersite.com`**), **not** `…/api` — callers use **`/api/...`** paths. The storefront can stay on **`https://ruvali.co.in`** while the API lives on **`REACT_APP_API_URL`**.
+- Optional: in development, leave **`REACT_APP_API_URL`** unset to use **`http://localhost:5005`**, or set **`REACT_APP_USE_LOCAL_API=true`** for **`ruvali-backend`** alongside CRA **`package.json`** **`proxy`**.
 - The storefront uses **`src/lib/apiClient.js`** (`x-store-slug` on every request; admin JWT only on admin routes). Backend source of truth lives in **`ruvali_backend`** (`https://github.com/AJITHKUMARFULLSTACK/ruvali_backend`): configure **`CORS_ORIGINS`** on the server so your frontend origin is allowed.
 
 

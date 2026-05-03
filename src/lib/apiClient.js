@@ -1,10 +1,10 @@
 /**
  * Backend origin only (scheme + host, optional port). Must NOT include `/api`.
- * Requests use paths like `/api/products` → `${base}/api/products`.
+ * Requests use paths like `/api/products` → `${API_BASE_URL}/api/products`.
  *
- * Production: REACT_APP_API_URL=https://ruvali.co.in
+ * Production default (no REACT_APP_API_URL): Hostinger Node deployment.
  */
-const LIVE_API_DEFAULT = 'https://ruvali.co.in';
+const DEFAULT_PRODUCTION_API = 'https://ruvali-co-in-924955.hostingersite.com';
 const LOCAL_API = 'http://localhost:5005';
 
 function normalizeBase(url) {
@@ -27,10 +27,12 @@ export function getApiBaseUrl() {
     (process.env.NODE_ENV === 'development' &&
       process.env.REACT_APP_USE_LOCAL_API !== 'false');
 
-  return normalizeBase(useLocal ? LOCAL_API : LIVE_API_DEFAULT);
+  return normalizeBase(useLocal ? LOCAL_API : DEFAULT_PRODUCTION_API);
 }
 
-export const apiBaseUrl = getApiBaseUrl();
+/** Absolute backend origin used for `fetch(`${API_BASE_URL}${path}`)`. */
+export const API_BASE_URL = getApiBaseUrl();
+export const apiBaseUrl = API_BASE_URL;
 
 /**
  * Paths that must never attach admin JWT (public + customer-auth routes).
@@ -103,24 +105,25 @@ export function publicApiHeaders(extra = {}) {
 function responseBodyLooksLikeHtml(text) {
   if (typeof text !== 'string') return false;
   const t = text.trim();
+  if (/^<!DOCTYPE/i.test(t)) return true;
   return t.startsWith('<') && (t.startsWith('<!') || /^<html[\s>]/i.test(t));
 }
 
-const HTML_INSTEAD_OF_JSON = 'Server returned HTML instead of JSON. Check API URL.';
+const HTML_WRONG_BACKEND = 'API is returning HTML. Wrong backend URL.';
 
 async function handleResponse(res) {
   const raw = await res.text();
+  if (responseBodyLooksLikeHtml(raw)) {
+    const error = new Error(HTML_WRONG_BACKEND);
+    error.status = res.status;
+    error.data = raw;
+    throw error;
+  }
   const ct = (res.headers.get('content-type') || '').toLowerCase();
   const declaredJson = ct.includes('application/json');
 
   let data;
   if (declaredJson) {
-    if (responseBodyLooksLikeHtml(raw)) {
-      const error = new Error(HTML_INSTEAD_OF_JSON);
-      error.status = res.status;
-      error.data = raw;
-      throw error;
-    }
     try {
       data = raw ? JSON.parse(raw) : null;
     } catch {
@@ -141,7 +144,7 @@ async function handleResponse(res) {
 
   if (!res.ok) {
     if (typeof data === 'string' && responseBodyLooksLikeHtml(data)) {
-      const error = new Error(HTML_INSTEAD_OF_JSON);
+      const error = new Error(HTML_WRONG_BACKEND);
       error.status = res.status;
       error.data = data;
       throw error;
@@ -159,7 +162,7 @@ async function handleResponse(res) {
   }
 
   if (typeof data === 'string' && responseBodyLooksLikeHtml(data)) {
-    const error = new Error(HTML_INSTEAD_OF_JSON);
+    const error = new Error(HTML_WRONG_BACKEND);
     error.status = res.status;
     error.data = data;
     throw error;
@@ -171,9 +174,15 @@ async function handleResponse(res) {
 /** Admin auth: POST JSON { email, password } */
 export const ADMIN_LOGIN_PATH = '/api/admin/login';
 
+function logApiCall(url) {
+  // eslint-disable-next-line no-console -- intentional: trace outbound API URLs
+  console.log('API CALL:', url);
+}
+
 export async function apiGet(path, options = {}) {
   const { headers: optionHeaders = {}, ...restOptions } = options;
-  const url = `${apiBaseUrl}${path}`;
+  const url = `${getApiBaseUrl()}${path}`;
+  logApiCall(url);
   const hdr = buildApiHeaders(path, 'GET', optionHeaders);
 
   const res = await fetch(url, {
@@ -188,7 +197,8 @@ function isFormDataBody(body) {
 }
 
 export async function apiPost(path, body, options = {}) {
-  const url = `${apiBaseUrl}${path}`;
+  const url = `${getApiBaseUrl()}${path}`;
+  logApiCall(url);
   const { headers: optionHeaders = {}, ...restOptions } = options;
   const multipart = isFormDataBody(body);
   const hdr = multipart
@@ -212,7 +222,8 @@ export async function apiPost(path, body, options = {}) {
 }
 
 export async function apiPut(path, body, options = {}) {
-  const url = `${apiBaseUrl}${path}`;
+  const url = `${getApiBaseUrl()}${path}`;
+  logApiCall(url);
   const { headers: optionHeaders = {}, ...restOptions } = options;
   const multipart = isFormDataBody(body);
   const hdr = multipart
@@ -236,7 +247,8 @@ export async function apiPut(path, body, options = {}) {
 }
 
 export async function apiPatch(path, body, options = {}) {
-  const url = `${apiBaseUrl}${path}`;
+  const url = `${getApiBaseUrl()}${path}`;
+  logApiCall(url);
   const { headers: optionHeaders = {}, ...restOptions } = options;
   const multipart = isFormDataBody(body);
   const hdr = multipart
@@ -260,7 +272,8 @@ export async function apiPatch(path, body, options = {}) {
 }
 
 export async function apiDelete(path, options = {}) {
-  const url = `${apiBaseUrl}${path}`;
+  const url = `${getApiBaseUrl()}${path}`;
+  logApiCall(url);
   const { headers: optionHeaders = {}, ...restOptions } = options;
   const hdr = buildApiHeaders(path, 'DELETE', optionHeaders);
 

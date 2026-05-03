@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Form, Input, Button } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { apiPost, ADMIN_LOGIN_PATH, getApiBaseUrl } from '../../../lib/apiClient';
+import { apiPost, ADMIN_LOGIN_PATH } from '../../../lib/apiClient';
 import { toast } from '../../../lib/toast';
 import './AdminLogin.css';
 
@@ -15,13 +15,6 @@ const AdminLogin = () => {
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      const base = getApiBaseUrl();
-      const loginUrl = `${base}${ADMIN_LOGIN_PATH}`;
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.debug('[AdminLogin] POST', loginUrl);
-      }
-
       const data = await apiPost(ADMIN_LOGIN_PATH, {
         email: (values.email || '').trim(),
         password: values.password,
