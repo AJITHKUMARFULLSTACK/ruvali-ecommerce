@@ -34,6 +34,45 @@ export function getApiBaseUrl() {
 export const API_BASE_URL = getApiBaseUrl();
 export const apiBaseUrl = API_BASE_URL;
 
+/** localStorage key for admin JWT (must match AdminLogin and ProtectedRoute). */
+export const ADMIN_TOKEN_KEY = 'adminToken';
+
+export function getAdminToken() {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(ADMIN_TOKEN_KEY);
+}
+
+/**
+ * Clear admin session and send user to /admin/login with a one-shot notice.
+ * Safe to call from apiClient (no React router needed).
+ */
+export function invalidateAdminSessionAndRedirect() {
+  try {
+    localStorage.removeItem(ADMIN_TOKEN_KEY);
+    localStorage.removeItem('admin');
+    localStorage.removeItem('adminStore');
+  } catch {
+    /* ignore */
+  }
+  if (typeof window === 'undefined') return;
+  const p = window.location.pathname || '';
+  if (p.startsWith('/admin') && p !== '/admin/login') {
+    try {
+      sessionStorage.setItem('admin_session_notice', 'Session expired');
+    } catch {
+      /* ignore */
+    }
+    window.location.replace('/admin/login');
+  }
+}
+
+function logAdminTokenForDebug(pathForLog, token) {
+  if (!token || typeof pathForLog !== 'string') return;
+  if (!pathForLog.startsWith('/api/admin/whatsapp')) return;
+  // eslint-disable-next-line no-console -- requested for WhatsApp auth debugging
+  console.log('AUTH TOKEN:', token);
+}
+
 /**
  * Paths that must never attach admin JWT (public + customer-auth routes).
  */
@@ -61,7 +100,14 @@ function shouldAttachAdminJwt(pathWithQuery, method = 'GET') {
   }
 
   if (typeof window === 'undefined') return false;
-  return Boolean(window.localStorage.getItem('adminToken'));
+
+  /** All other /api/admin/* routes require Bearer when a token exists. */
+  if (p.startsWith('/api/admin/')) {
+    return Boolean(window.localStorage.getItem(ADMIN_TOKEN_KEY));
+  }
+
+  /** Legacy/other admin-only calls outside /api/admin/ (unlikely) — attach if logged in */
+  return Boolean(window.localStorage.getItem(ADMIN_TOKEN_KEY));
 }
 
 /**
@@ -86,10 +132,14 @@ export function buildApiHeaders(path, methodOrHeaders = {}, maybeHeaders = undef
     headers['x-store-slug'] = STORE_SLUG;
   }
 
+  const pathForJwt = typeof path === 'string' ? path.split('?')[0] : path;
   const attach = shouldAttachAdminJwt(path, method);
   if (attach && !headers.Authorization && !headers.authorization) {
-    const token = typeof window !== 'undefined' ? window.localStorage.getItem('adminToken') : null;
-    if (token) headers.Authorization = `Bearer ${token}`;
+    const token = getAdminToken();
+    if (token) {
+      logAdminTokenForDebug(pathForJwt, token);
+      headers.Authorization = `Bearer ${token}`;
+    }
   }
 
   return headers;
@@ -111,8 +161,24 @@ function responseBodyLooksLikeHtml(text) {
 
 const HTML_WRONG_BACKEND = 'API is returning HTML. Wrong backend URL.';
 
-async function handleResponse(res) {
+async function handleResponse(res, meta = {}) {
+  const requestPath = meta.requestPath;
   const raw = await res.text();
+
+  const pathOnly = typeof requestPath === 'string' ? requestPath.split('?')[0] : '';
+  const admin401 =
+    !res.ok &&
+    res.status === 401 &&
+    pathOnly.startsWith('/api/admin') &&
+    pathOnly !== '/api/admin/login';
+
+  if (admin401) {
+    invalidateAdminSessionAndRedirect();
+    const err401 = new Error('Session expired');
+    err401.status = 401;
+    throw err401;
+  }
+
   if (responseBodyLooksLikeHtml(raw)) {
     const error = new Error(HTML_WRONG_BACKEND);
     error.status = res.status;
@@ -192,14 +258,30 @@ export async function fetchApi(pathWithQuery, init = {}) {
   const { headers: hdrExtra, ...rest } = init;
   const merged =
     hdrExtra && typeof hdrExtra === 'object' && !(hdrExtra instanceof Headers)
-      ? buildApiHeaders(pathOnly, method, { ...hdrExtra })
-      : buildApiHeaders(pathOnly, method);
+      ? buildApiHeaders(pathNorm, method, { ...hdrExtra })
+      : buildApiHeaders(pathNorm, method);
 
-  return fetch(url, {
+  let finalHeaders = merged;
+  const t = getAdminToken();
+  if (
+    pathOnly.startsWith('/api/admin/') &&
+    pathOnly !== '/api/admin/login' &&
+    t &&
+    !(merged.Authorization || merged.authorization)
+  ) {
+    logAdminTokenForDebug(pathOnly, t);
+    finalHeaders = { ...merged, Authorization: `Bearer ${t}` };
+  }
+
+  const res = await fetch(url, {
     ...rest,
-    headers: merged,
+    headers: finalHeaders,
     method,
   });
+  if (res.status === 401 && pathOnly.startsWith('/api/admin') && pathOnly !== '/api/admin/login') {
+    invalidateAdminSessionAndRedirect();
+  }
+  return res;
 }
 
 export async function apiGet(path, options = {}) {
@@ -212,7 +294,7 @@ export async function apiGet(path, options = {}) {
     ...restOptions,
     headers: hdr,
   });
-  return handleResponse(res);
+  return handleResponse(res, { requestPath: path });
 }
 
 function isFormDataBody(body) {
@@ -241,7 +323,7 @@ export async function apiPost(path, body, options = {}) {
     body: multipart ? body : JSON.stringify(body),
     ...restOptions,
   });
-  return handleResponse(res);
+  return handleResponse(res, { requestPath: path });
 }
 
 export async function apiPut(path, body, options = {}) {
@@ -266,7 +348,7 @@ export async function apiPut(path, body, options = {}) {
     body: multipart ? body : JSON.stringify(body),
     ...restOptions,
   });
-  return handleResponse(res);
+  return handleResponse(res, { requestPath: path });
 }
 
 export async function apiPatch(path, body, options = {}) {
@@ -291,7 +373,7 @@ export async function apiPatch(path, body, options = {}) {
     body: multipart ? body : JSON.stringify(body),
     ...restOptions,
   });
-  return handleResponse(res);
+  return handleResponse(res, { requestPath: path });
 }
 
 export async function apiDelete(path, options = {}) {
@@ -305,5 +387,5 @@ export async function apiDelete(path, options = {}) {
     ...restOptions,
     headers: hdr,
   });
-  return handleResponse(res);
+  return handleResponse(res, { requestPath: path });
 }

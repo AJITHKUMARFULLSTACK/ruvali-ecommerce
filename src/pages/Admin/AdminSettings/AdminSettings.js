@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Input, Button, Alert } from 'antd';
 import { QRCodeSVG as QRCode } from 'qrcode.react';
-import { apiGet, apiPut, apiPost, fetchApi } from '../../../lib/apiClient';
+import { apiGet, apiPut, apiPost, fetchApi, getAdminToken } from '../../../lib/apiClient';
 import { uploadStoreBrandingImage } from '../../../lib/backendUploads';
 import { toast } from '../../../lib/toast';
 import { resolveImageUrl } from '../../../lib/imageUtils';
@@ -62,7 +62,7 @@ const AdminSettings = () => {
 
   /* WhatsApp status and QR stream */
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
+    const token = getAdminToken();
     if (!token) return;
 
     let cancelled = false;
@@ -76,11 +76,18 @@ const AdminSettings = () => {
       stopQrStream();
       setWaStreamError(null);
 
+      const waToken = getAdminToken();
+
       const controller = new AbortController();
       const res = await fetchApi('/api/admin/whatsapp/qr-stream', {
         signal: controller.signal,
+        headers:
+          waToken != null ? { Authorization: `Bearer ${waToken}` } : {},
       });
 
+      if (res.status === 401) {
+        return;
+      }
       if (!res.ok) {
         console.error('[WhatsApp] qr-stream non-200:', res.status, res.statusText);
         setWaStreamError('Could not open WhatsApp QR stream. Please try initializing again.');
@@ -160,7 +167,7 @@ const AdminSettings = () => {
   }, []);
 
   const handleInitWhatsApp = async () => {
-    const token = localStorage.getItem('adminToken');
+    const token = getAdminToken();
     if (!token) return;
     setWaStreamError(null);
     setWaInitMessage('Starting... please wait for QR code');
@@ -171,7 +178,12 @@ const AdminSettings = () => {
       const controller = new AbortController();
       const res = await fetchApi('/api/admin/whatsapp/qr-stream', {
         signal: controller.signal,
+        headers:
+          token != null ? { Authorization: `Bearer ${token}` } : {},
       });
+      if (res.status === 401) {
+        return;
+      }
       if (!res.ok) {
         console.error('[WhatsApp] qr-stream non-200 after init:', res.status, res.statusText);
         setWaStreamError('Could not open WhatsApp QR stream. Please try again.');

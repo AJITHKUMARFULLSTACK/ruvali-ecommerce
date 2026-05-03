@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { resolveImageUrl } from '../../lib/imageUtils';
+import { ADMIN_TOKEN_KEY } from '../../lib/apiClient';
 import './AdminLayout.css';
 
 const AdminLayout = ({ children }) => {
@@ -16,7 +17,7 @@ const AdminLayout = ({ children }) => {
   });
 
   const handleLogout = () => {
-    localStorage.removeItem('adminToken');
+    localStorage.removeItem(ADMIN_TOKEN_KEY);
     localStorage.removeItem('adminStore');
     localStorage.removeItem('admin');
     navigate('/admin/login');

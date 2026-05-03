@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Form, Input, Button } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { apiPost, ADMIN_LOGIN_PATH } from '../../../lib/apiClient';
+import { apiPost, ADMIN_LOGIN_PATH, ADMIN_TOKEN_KEY } from '../../../lib/apiClient';
 import { toast } from '../../../lib/toast';
 import './AdminLogin.css';
 
@@ -11,6 +11,18 @@ const AdminLogin = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    try {
+      const notice = sessionStorage.getItem('admin_session_notice');
+      if (notice) {
+        toast.error(notice);
+        sessionStorage.removeItem('admin_session_notice');
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const handleSubmit = async (values) => {
     setLoading(true);
@@ -20,7 +32,7 @@ const AdminLogin = () => {
         password: values.password,
       });
 
-      localStorage.setItem('adminToken', data.token);
+      localStorage.setItem(ADMIN_TOKEN_KEY, data.token);
       localStorage.setItem('admin', JSON.stringify(data.admin));
       if (data.store) localStorage.setItem('adminStore', JSON.stringify(data.store));
       toast.success('Welcome back!');
