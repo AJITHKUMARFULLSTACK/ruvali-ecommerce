@@ -87,26 +87,12 @@ ruvali-ecommerce/
 - Category sidebars with active states
 - Responsive grid layouts
 
-## API & Deployment
+## API & deployment
 
-### Local vs production API
+- Copy **`.env.example`** to **`.env.local`** and set **`REACT_APP_API_URL`** (your HTTPS API origin, no trailing slash) and **`REACT_APP_STORE_SLUG`** (must match `stores.slug` in MySQL).
+- Optional: **`REACT_APP_USE_LOCAL_API=true`** to use **`http://localhost:5005`** during local **`ruvali-backend`** development (see CRA **`package.json`** **`proxy`**).
+- The storefront uses **`src/lib/apiClient.js`** (`x-store-slug` on every request; admin JWT only on admin routes). Backend source of truth lives in **`ruvali_backend`** (`https://github.com/AJITHKUMARFULLSTACK/ruvali_backend`): configure **`CORS_ORIGINS`** on the server so your frontend origin is allowed.
 
-The app uses an `isTesting` flag (see `src/config.js`):
-
-- **Local dev** (`npm start`): `isTesting` is `true` → API requests go to local backend via proxy (`http://localhost:5005`)
-- **Production build** (Vercel): `isTesting` is `false` → API requests go to `https://ruvali-ecommerce-1.onrender.com`
-
-Override with `REACT_APP_IS_TESTING=true` or `REACT_APP_IS_TESTING=false` in `.env.local` or Vercel env vars.
-
-### CORS (Render backend) – required for deployment
-
-The deployed frontend (Vercel) must be in the backend's allowed origins. On Render, set:
-
-```
-CORS_ORIGINS=https://ruvali-ecommerce.vercel.app,http://localhost:3000
-```
-
-Replace with your actual Vercel URL. See [DEPLOYMENT.md](./DEPLOYMENT.md) for full setup.
 
 ## Future Enhancements
 
