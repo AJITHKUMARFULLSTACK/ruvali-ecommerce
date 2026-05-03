@@ -1,11 +1,19 @@
 /**
- * Backend base URL — set REACT_APP_API_URL for production / remote API.
+ * Backend origin only (scheme + host, optional port). Must NOT include `/api`.
+ * Requests use paths like `/api/products` → `${base}/api/products`.
+ *
+ * Production: REACT_APP_API_URL=https://ruvali.co.in
  */
 const LIVE_API_DEFAULT = 'https://ruvali.co.in';
 const LOCAL_API = 'http://localhost:5005';
 
 function normalizeBase(url) {
-  return (url || '').replace(/\/$/, '');
+  let u = (url || '').trim().replace(/\/$/, '');
+  // If mis-set to …/api, strip so paths like `/api/foo` don't become `/api/api/foo`
+  if (u.endsWith('/api')) {
+    u = u.slice(0, -4).replace(/\/$/, '');
+  }
+  return u;
 }
 
 export const STORE_SLUG = (process.env.REACT_APP_STORE_SLUG || 'ruvali').trim();
