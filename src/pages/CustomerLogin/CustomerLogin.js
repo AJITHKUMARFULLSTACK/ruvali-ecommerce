@@ -5,12 +5,12 @@ import { useStore } from '../../context/StoreContext';
 import { useCustomer } from '../../context/CustomerContext';
 import logoImg from '../../Assets/Images/Logo.png';
 import landingBg from '../../Assets/Images/LandingBg.png';
-import { publicApiHeaders } from '../../lib/apiClient';
+import { apiPost } from '../../lib/apiClient';
 import './CustomerLogin.css';
 
 const CustomerLogin = () => {
   const navigate = useNavigate();
-  const { backendUrl, storeSlug } = useStore();
+  const { storeSlug } = useStore();
   const { login } = useCustomer();
   const [loginError, setLoginError] = useState(null);
   const [registerError, setRegisterError] = useState(null);
@@ -39,23 +39,14 @@ const CustomerLogin = () => {
     setLoginError(null);
     setLoginLoading(true);
     try {
-      const res = await fetch(
-        `${backendUrl}/api/customer/login?storeSlug=${encodeURIComponent(storeSlug)}`,
-        {
-          method: 'POST',
-          headers: publicApiHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ email: values.email, password: values.password })
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) {
-        setLoginError(data?.error?.message || data?.error || 'Login failed');
-        return;
-      }
+      const data = await apiPost(`/api/customer/login?storeSlug=${encodeURIComponent(storeSlug)}`, {
+        email: values.email,
+        password: values.password,
+      });
       login(data.token, data.customer);
       navigate('/');
     } catch (err) {
-      setLoginError('Something went wrong. Please try again.');
+      setLoginError(err.data?.error?.message || err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoginLoading(false);
     }
@@ -73,28 +64,16 @@ const CustomerLogin = () => {
     setRegisterError(null);
     setRegisterLoading(true);
     try {
-      const res = await fetch(
-        `${backendUrl}/api/customer/register?storeSlug=${encodeURIComponent(storeSlug)}`,
-        {
-          method: 'POST',
-          headers: publicApiHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({
-            name: values.name,
-            email: values.email,
-            phone: values.phone,
-            password: values.password
-          })
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) {
-        setRegisterError(data?.error?.message || data?.error || 'Registration failed');
-        return;
-      }
+      const data = await apiPost(`/api/customer/register?storeSlug=${encodeURIComponent(storeSlug)}`, {
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        password: values.password,
+      });
       login(data.token, data.customer);
       navigate('/');
     } catch (err) {
-      setRegisterError('Something went wrong. Please try again.');
+      setRegisterError(err.data?.error?.message || err.message || 'Something went wrong. Please try again.');
     } finally {
       setRegisterLoading(false);
     }

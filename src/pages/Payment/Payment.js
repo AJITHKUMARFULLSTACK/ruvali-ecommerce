@@ -5,7 +5,7 @@ import { Form, Input, Button, Radio, Spin, Alert } from 'antd';
 import { useCart } from '../../context/CartContext';
 import { useStore } from '../../context/StoreContext';
 import { resolveImageUrl, getProductPrimaryImageSource } from '../../lib/imageUtils';
-import { publicApiHeaders } from '../../lib/apiClient';
+import { apiPost } from '../../lib/apiClient';
 import { isTesting } from '../../config';
 import './Payment.css';
 
@@ -13,7 +13,7 @@ const Payment = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { orderDetails, saveOrderDetails } = useCart();
-  const { backendUrl, storeSlug } = useStore();
+  const { storeSlug } = useStore();
   const [orderData, setOrderData] = useState(null);
   const [orderError, setOrderError] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('card');
@@ -66,24 +66,15 @@ const Payment = () => {
     // COD: use existing flow (no Razorpay)
     if (paymentMethod === 'cod') {
       try {
-        const response = await fetch(
-          `${backendUrl}/api/orders?storeSlug=${encodeURIComponent(storeSlug)}`,
+        const data = await apiPost(
+          `/api/orders?storeSlug=${encodeURIComponent(storeSlug)}`,
           {
-            method: 'POST',
-            headers: publicApiHeaders({ 'Content-Type': 'application/json' }),
-            body: JSON.stringify({
-              customer,
-              items: orderItems,
-              shippingInfo: orderData.shippingAddress,
-              shippingAmount: 100,
-            }),
+            customer,
+            items: orderItems,
+            shippingInfo: orderData.shippingAddress,
+            shippingAmount: 100,
           }
         );
-        const data = await response.json();
-        if (!response.ok) {
-          setOrderError('We could not place your order. Please try again.');
-          return;
-        }
         const paymentData = {
           ...orderData,
           paymentMethod: 'cod',
@@ -94,7 +85,7 @@ const Payment = () => {
         navigate('/order-confirmation', { state: { orderData: paymentData } });
       } catch (err) {
         console.error('[Payment] COD failed', err);
-        setOrderError('We could not place your order. Please try again.');
+        setOrderError(err.message || 'We could not place your order. Please try again.');
       }
       return;
     }
@@ -102,20 +93,17 @@ const Payment = () => {
     // Card / UPI: Razorpay flow
     try {
       console.log('[Razorpay] calling create with amount:', totalWithShipping);
-      const createRes = await fetch(
-        `${backendUrl}/api/orders/razorpay/create?storeSlug=${encodeURIComponent(storeSlug)}`,
-        {
-          method: 'POST',
-          headers: publicApiHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ amount: totalWithShipping }),
-        }
-      );
-      const createData = await createRes.json();
-      console.log('[Razorpay] create response:', createData);
-      if (!createRes.ok) {
-        setOrderError(createData?.error?.message || createData?.error || 'We could not start payment. Please try again.');
+      let createData;
+      try {
+        createData = await apiPost(
+          `/api/orders/razorpay/create?storeSlug=${encodeURIComponent(storeSlug)}`,
+          { amount: totalWithShipping }
+        );
+      } catch (e) {
+        setOrderError(e.data?.error?.message || e.message || 'We could not start payment. Please try again.');
         return;
       }
+      console.log('[Razorpay] create response:', createData);
       if (!createData?.orderId) {
         setOrderError('Could not initiate payment. Please try again.');
         return;
@@ -141,28 +129,19 @@ const Payment = () => {
         handler: async function (paymentResponse) {
           try {
             console.log('[Razorpay] payment success, calling verify');
-            const verifyRes = await fetch(
-              `${backendUrl}/api/orders/razorpay/verify?storeSlug=${encodeURIComponent(storeSlug)}`,
+            const verifyData = await apiPost(
+              `/api/orders/razorpay/verify?storeSlug=${encodeURIComponent(storeSlug)}`,
               {
-                method: 'POST',
-                headers: publicApiHeaders({ 'Content-Type': 'application/json' }),
-                body: JSON.stringify({
-                  razorpay_order_id: paymentResponse.razorpay_order_id,
-                  razorpay_payment_id: paymentResponse.razorpay_payment_id,
-                  razorpay_signature: paymentResponse.razorpay_signature,
-                  customer,
-                  items: orderItems,
-                  shippingInfo: orderData.shippingAddress,
-                  shippingAmount: 100,
-                }),
+                razorpay_order_id: paymentResponse.razorpay_order_id,
+                razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                razorpay_signature: paymentResponse.razorpay_signature,
+                customer,
+                items: orderItems,
+                shippingInfo: orderData.shippingAddress,
+                shippingAmount: 100,
               }
             );
-            const verifyData = await verifyRes.json();
             console.log('[Razorpay] verify response:', verifyData);
-            if (!verifyRes.ok) {
-              setOrderError(verifyData?.error?.message || verifyData?.error || 'Payment verification failed. Please contact support.');
-              return;
-            }
             const paymentData = {
               ...orderData,
               paymentMethod,
@@ -173,7 +152,9 @@ const Payment = () => {
             navigate('/order-confirmation', { state: { orderData: paymentData } });
           } catch (err) {
             console.error('[Payment] verify failed', err);
-            setOrderError('Payment verification failed. Please try again.');
+            setOrderError(
+              err.data?.error?.message || err.message || 'Payment verification failed. Please contact support.'
+            );
           }
         },
         modal: {
@@ -237,7 +218,10 @@ const Payment = () => {
                     <div>
                       <h3>{item.product?.name}</h3>
                       <p>Quantity: {item.quantity}</p>
-                      <p>Price: ₹{price.toLocaleString('en-IN')} each</p>
+                      <p>
+                        Price: ₹
+                        {(Number(item.product?.price) || Number(item.price) || 0).toLocaleString('en-IN')} each
+                      </p>
                     </div>
                   </div>
                 );

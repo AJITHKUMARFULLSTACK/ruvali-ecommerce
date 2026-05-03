@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Form, Input, Button } from 'antd';
 import InfoPage from '../../components/InfoPage/InfoPage';
 import { useStore } from '../../context/StoreContext';
-import { publicApiHeaders } from '../../lib/apiClient';
+import { apiGet } from '../../lib/apiClient';
 import './TrackOrder.css';
 
 const STATUS_LABELS = {
@@ -16,7 +16,7 @@ const STATUS_LABELS = {
 
 const TrackOrder = () => {
   const [form] = Form.useForm();
-  const { backendUrl, storeSlug } = useStore();
+  const { storeSlug } = useStore();
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState(null);
   const [error, setError] = useState(null);
@@ -30,25 +30,16 @@ const TrackOrder = () => {
       const params = new URLSearchParams({
         storeSlug,
         orderId: values.orderId.trim().replace(/^#/, '').toLowerCase(),
-        phone: values.phone.trim()
+        phone: values.phone.trim(),
       });
-      const res = await fetch(`${backendUrl}/api/orders/track?${params.toString()}`, {
-        headers: publicApiHeaders(),
-      });
-
-      if (!res.ok) {
-        if (res.status === 404) {
-          setError('No order found with that ID and phone number. Please check your details.');
-        } else {
-          setError('Something went wrong. Please try again.');
-        }
-        return;
-      }
-
-      const data = await res.json();
+      const data = await apiGet(`/api/orders/track?${params.toString()}`);
       setOrder(data);
-    } catch {
-      setError('Something went wrong. Please try again.');
+    } catch (e) {
+      if (e?.status === 404) {
+        setError('No order found with that ID and phone number. Please check your details.');
+      } else {
+        setError(e?.message || 'Something went wrong. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

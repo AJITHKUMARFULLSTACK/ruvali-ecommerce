@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Input, Button, Alert } from 'antd';
 import { QRCodeSVG as QRCode } from 'qrcode.react';
-import { apiGet, apiPut, apiPost, getApiBaseUrl, buildApiHeaders } from '../../../lib/apiClient';
+import { apiGet, apiPut, apiPost, fetchApi } from '../../../lib/apiClient';
 import { uploadStoreBrandingImage } from '../../../lib/backendUploads';
 import { toast } from '../../../lib/toast';
 import { resolveImageUrl } from '../../../lib/imageUtils';
@@ -77,8 +77,7 @@ const AdminSettings = () => {
       setWaStreamError(null);
 
       const controller = new AbortController();
-      const res = await fetch(`${getApiBaseUrl()}/api/admin/whatsapp/qr-stream`, {
-        headers: buildApiHeaders('/api/admin/whatsapp/qr-stream', 'GET', {}),
+      const res = await fetchApi('/api/admin/whatsapp/qr-stream', {
         signal: controller.signal,
       });
 
@@ -170,8 +169,7 @@ const AdminSettings = () => {
       await apiPost('/api/admin/whatsapp/init', {});
       // The stream will deliver QR/ready if init succeeds
       const controller = new AbortController();
-      const res = await fetch(`${getApiBaseUrl()}/api/admin/whatsapp/qr-stream`, {
-        headers: buildApiHeaders('/api/admin/whatsapp/qr-stream', 'GET', {}),
+      const res = await fetchApi('/api/admin/whatsapp/qr-stream', {
         signal: controller.signal,
       });
       if (!res.ok) {

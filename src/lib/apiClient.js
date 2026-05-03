@@ -174,15 +174,38 @@ async function handleResponse(res) {
 /** Admin auth: POST JSON { email, password } */
 export const ADMIN_LOGIN_PATH = '/api/admin/login';
 
-function logApiCall(url) {
+export function logApiCall(path) {
   // eslint-disable-next-line no-console -- intentional: trace outbound API URLs
-  console.log('API CALL:', url);
+  console.log('API CALL:', `${getApiBaseUrl()}${path}`);
+}
+
+/**
+ * Backend fetch returning the raw Response (streaming bodies, blobs).
+ * Logs and merges `buildApiHeaders` like apiGet/apiPost — does NOT run handleResponse.
+ */
+export async function fetchApi(pathWithQuery, init = {}) {
+  const pathNorm = pathWithQuery.startsWith('/') ? pathWithQuery : `/${pathWithQuery}`;
+  const pathOnly = pathNorm.split('?')[0];
+  logApiCall(pathNorm);
+  const method = (init.method || 'GET').toUpperCase();
+  const url = `${getApiBaseUrl()}${pathNorm}`;
+  const { headers: hdrExtra, ...rest } = init;
+  const merged =
+    hdrExtra && typeof hdrExtra === 'object' && !(hdrExtra instanceof Headers)
+      ? buildApiHeaders(pathOnly, method, { ...hdrExtra })
+      : buildApiHeaders(pathOnly, method);
+
+  return fetch(url, {
+    ...rest,
+    headers: merged,
+    method,
+  });
 }
 
 export async function apiGet(path, options = {}) {
   const { headers: optionHeaders = {}, ...restOptions } = options;
+  logApiCall(path);
   const url = `${getApiBaseUrl()}${path}`;
-  logApiCall(url);
   const hdr = buildApiHeaders(path, 'GET', optionHeaders);
 
   const res = await fetch(url, {
@@ -197,8 +220,8 @@ function isFormDataBody(body) {
 }
 
 export async function apiPost(path, body, options = {}) {
+  logApiCall(path);
   const url = `${getApiBaseUrl()}${path}`;
-  logApiCall(url);
   const { headers: optionHeaders = {}, ...restOptions } = options;
   const multipart = isFormDataBody(body);
   const hdr = multipart
@@ -222,8 +245,8 @@ export async function apiPost(path, body, options = {}) {
 }
 
 export async function apiPut(path, body, options = {}) {
+  logApiCall(path);
   const url = `${getApiBaseUrl()}${path}`;
-  logApiCall(url);
   const { headers: optionHeaders = {}, ...restOptions } = options;
   const multipart = isFormDataBody(body);
   const hdr = multipart
@@ -247,8 +270,8 @@ export async function apiPut(path, body, options = {}) {
 }
 
 export async function apiPatch(path, body, options = {}) {
+  logApiCall(path);
   const url = `${getApiBaseUrl()}${path}`;
-  logApiCall(url);
   const { headers: optionHeaders = {}, ...restOptions } = options;
   const multipart = isFormDataBody(body);
   const hdr = multipart
@@ -272,8 +295,8 @@ export async function apiPatch(path, body, options = {}) {
 }
 
 export async function apiDelete(path, options = {}) {
+  logApiCall(path);
   const url = `${getApiBaseUrl()}${path}`;
-  logApiCall(url);
   const { headers: optionHeaders = {}, ...restOptions } = options;
   const hdr = buildApiHeaders(path, 'DELETE', optionHeaders);
 

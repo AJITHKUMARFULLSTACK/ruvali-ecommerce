@@ -4,7 +4,7 @@ import { useStore } from '../../context/StoreContext';
 import { useCustomer } from '../../context/CustomerContext';
 import { TOP_NAV_HEIGHT } from '../../components/TopNav/TopNav';
 import ScrollReveal from '../../components/ScrollReveal/ScrollReveal';
-import { publicApiHeaders } from '../../lib/apiClient';
+import { apiGet } from '../../lib/apiClient';
 import './MyOrders.css';
 
 const STATUS_LABELS = {
@@ -24,7 +24,7 @@ const STATUS_COLORS = {
 };
 
 const MyOrders = () => {
-  const { backendUrl, storeSlug } = useStore();
+  const { storeSlug } = useStore();
   const { customer, token, isLoggedIn } = useCustomer();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,26 +37,18 @@ const MyOrders = () => {
     }
     const fetchOrders = async () => {
       try {
-        const res = await fetch(
-          `${backendUrl}/api/customer/orders?storeSlug=${encodeURIComponent(storeSlug)}`,
-          {
-            headers: publicApiHeaders({ Authorization: `Bearer ${token}` }),
-          }
-        );
-        const data = await res.json();
-        if (!res.ok) {
-          setError(data?.error?.message || 'Failed to load orders');
-          return;
-        }
+        const data = await apiGet(`/api/customer/orders?storeSlug=${encodeURIComponent(storeSlug)}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setOrders(Array.isArray(data) ? data : []);
       } catch (err) {
-        setError('Failed to load orders');
+        setError(err.data?.error?.message || err.message || 'Failed to load orders');
       } finally {
         setLoading(false);
       }
     };
     fetchOrders();
-  }, [backendUrl, storeSlug, token, isLoggedIn]);
+  }, [storeSlug, token, isLoggedIn]);
 
   if (!isLoggedIn) {
     return (
