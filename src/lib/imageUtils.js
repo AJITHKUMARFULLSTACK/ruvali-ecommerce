@@ -9,13 +9,17 @@ function getPlaceholderPath() {
 
 const PLACEHOLDER_PATH = getPlaceholderPath();
 
-/** Raw item from backend gallery: `{ fullImageUrl, imageUrl }` or legacy string URL. */
+/** Raw item from backend gallery: prefer `fullImageUrl`, then `imageUrl`, then legacy fields. */
 export function pickGalleryImageSrc(item) {
   if (item == null) return '';
   if (typeof item === 'string') return item.trim();
   if (typeof item === 'object') {
-    const u = item.fullImageUrl || item.imageUrl || item.url || '';
-    return typeof u === 'string' ? u.trim() : '';
+    const fu = typeof item.fullImageUrl === 'string' ? item.fullImageUrl.trim() : '';
+    if (fu) return fu;
+    const iu = typeof item.imageUrl === 'string' ? item.imageUrl.trim() : '';
+    if (iu) return iu;
+    const u = typeof item.url === 'string' ? item.url.trim() : '';
+    return u || '';
   }
   return '';
 }

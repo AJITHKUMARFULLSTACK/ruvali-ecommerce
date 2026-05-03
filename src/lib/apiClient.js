@@ -1,7 +1,7 @@
 /**
  * Backend base URL — set REACT_APP_API_URL for production / remote API.
  */
-const LIVE_API_DEFAULT = 'https://maroon-mongoose-803610.hostingersite.com';
+const LIVE_API_DEFAULT = 'https://ruvali.co.in';
 const LOCAL_API = 'http://localhost:5005';
 
 function normalizeBase(url) {
