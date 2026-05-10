@@ -392,3 +392,54 @@
   border-radius: 3px;
   font-size: 11px;
 }
+
+.settings-save-btn {
+  min-height: 44px;
+}
+
+@media (max-width: 767px) {
+  .admin-settings {
+    padding: 16px;
+  }
+
+  .admin-settings h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+  }
+
+  .settings-section {
+    padding: 16px;
+  }
+
+  .settings-block {
+    margin-bottom: 24px;
+  }
+
+  .settings-save-btn {
+    width: 100%;
+  }
+
+  .wa-qr-wrap {
+    align-self: center;
+  }
+
+  .wa-qr-wrap svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .wa-qr-expired {
+    width: 200px;
+    height: 200px;
+  }
+
+  .wa-main-btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .wa-qr-steps {
+    font-size: 13px;
+  }
+}

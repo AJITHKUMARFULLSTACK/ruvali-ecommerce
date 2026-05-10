@@ -3,6 +3,7 @@
  */
 
 function dispatchPayload(eventName, obj, callbacks) {
+  if (eventName === 'ping') return;
   if (obj.qr && (eventName === 'qr' || obj.type === 'qr')) {
     callbacks.onQr?.(obj.qr);
   }

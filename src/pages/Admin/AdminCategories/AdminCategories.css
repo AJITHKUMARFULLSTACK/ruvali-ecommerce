@@ -214,3 +214,62 @@
   font-family: 'Outfit', sans-serif;
   padding: 24px;
 }
+
+@media (max-width: 767px) {
+  .admin-categories-header {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .admin-categories h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+  }
+
+  .admin-cat-add-btn {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+
+  .admin-cat-form-row {
+    flex-direction: column;
+  }
+
+  .admin-cat-select {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .admin-cat-input {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .admin-cat-row {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .admin-cat-name {
+    font-size: 15px;
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .admin-cat-banner-cell {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .admin-cat-banner-preview {
+    width: 60px;
+    height: 30px;
+  }
+
+  .admin-cat-btn {
+    min-height: 36px;
+    font-size: 12px;
+  }
+}

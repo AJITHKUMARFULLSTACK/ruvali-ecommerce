@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiGet, apiBaseUrl, STORE_SLUG } from '../lib/apiClient';
@@ -31,29 +31,18 @@ function getStoreSlug(location, defaultSlug) {
 
 export const StoreProvider = ({ children }) => {
   const location = useLocation();
-  const [lastFetchTime, setLastFetchTime] = useState(null);
 
   const storeSlug = getStoreSlug(location, DEFAULT_STORE_SLUG);
 
-  const {
-    data: store,
-    isLoading: storeLoading
-  } = useQuery({
+  const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ['store', storeSlug],
-    queryFn: async () => {
-      const data = await apiGet(`/api/store/${storeSlug}`);
-      setLastFetchTime(new Date().toISOString());
-      return data;
-    },
-    staleTime: 1000 * 30,
-    refetchOnWindowFocus: true,
-    enabled: !!storeSlug
+    queryFn: () => apiGet(`/api/store/${storeSlug}`),
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    enabled: !!storeSlug,
   });
 
-  const {
-    data: products,
-    isLoading: productsLoading
-  } = useQuery({
+  const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: ['products', storeSlug],
     queryFn: async () => {
       const data = await apiGet(
@@ -61,22 +50,24 @@ export const StoreProvider = ({ children }) => {
       );
       return Array.isArray(data) ? data : [];
     },
-    staleTime: 1000 * 30,
-    refetchOnWindowFocus: true,
-    enabled: !!storeSlug
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    enabled: !!storeSlug,
   });
 
   const productCount = Array.isArray(products) ? products.length : 0;
   const loading = storeLoading || productsLoading;
 
-  const value = {
-    backendUrl: BACKEND_URL,
-    storeSlug,
-    store,
-    productCount,
-    lastFetchTime,
-    loading,
-  };
+  const value = useMemo(
+    () => ({
+      backendUrl: BACKEND_URL,
+      storeSlug,
+      store,
+      productCount,
+      loading,
+    }),
+    [storeSlug, store, productCount, loading]
+  );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 };

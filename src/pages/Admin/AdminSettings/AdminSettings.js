@@ -5,9 +5,7 @@ import { Input, Button } from 'antd';
 import { QRCodeSVG as QRCode } from 'qrcode.react';
 import { apiGet, apiPut, apiPost, fetchApi, getAdminToken } from '../../../lib/apiClient';
 import { consumeWhatsAppSse } from '../../../lib/whatsappSseReader';
-import { uploadStoreBrandingImage } from '../../../lib/backendUploads';
 import { toast } from '../../../lib/toast';
-import { resolveImageUrl } from '../../../lib/imageUtils';
 import './AdminSettings.css';
 
 // WhatsApp UI state machine:
@@ -17,7 +15,6 @@ import './AdminSettings.css';
 // 'connected'    — WhatsApp authenticated
 // 'reconnecting' — was connected, lost connection
 // 'error'        — init or stream failed
-// (disabled state is handled inline via waEnabled flag)
 
 const AdminSettings = () => {
   const queryClient = useQueryClient();
@@ -55,8 +52,6 @@ const AdminSettings = () => {
     if (storeData) {
       setStore({
         name: storeData.name || '',
-        logo: storeData.logo || '',
-        backgroundImage: storeData.backgroundImage || '',
         whatsappNumber: storeData.whatsappNumber || '',
       });
     }
@@ -160,6 +155,7 @@ const AdminSettings = () => {
     await openStream();
   }, [openStream]);
 
+  // Bootstrap: check status once on mount
   useEffect(() => {
     if (!getAdminToken()) return undefined;
 
@@ -205,10 +201,23 @@ const AdminSettings = () => {
     return () => clearTimeout(t);
   }, [waUiState, qrCountdown]);
 
+  // 90-second loading timeout — server needs ≥2GB RAM for Puppeteer/WhatsApp
+  useEffect(() => {
+    if (waUiState !== 'loading') return undefined;
+    const t = setTimeout(() => {
+      stopStream();
+      initRunningRef.current = false;
+      setWaError(
+        'QR code is taking too long to generate. This usually means the server needs more memory ' +
+        '(minimum 2GB RAM required for WhatsApp). Please try again or contact your hosting provider.'
+      );
+      setWaUiState('error');
+    }, 90000);
+    return () => clearTimeout(t);
+  }, [waUiState, stopStream]);
+
   const handleConnectClick = () => doInitAndStream();
-
   const handleRefreshQr = () => doInitAndStream();
-
   const handleCancel = () => {
     stopStream();
     initRunningRef.current = false;
@@ -228,29 +237,12 @@ const AdminSettings = () => {
     },
   });
 
-  const handleUpload = async (e, field) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const data = await uploadStoreBrandingImage(file);
-      const url =
-        typeof data.url === 'string'
-          ? data.url
-          : data.imageUrl || data.fullImageUrl || '';
-      if (url) setStore((s) => ({ ...s, [field]: url }));
-    } catch (err) {
-      toast.error(err.message || 'Upload failed');
-    }
-  };
-
   const handleSave = async () => {
     if (!store) return;
     setSaving(true);
     try {
       await updateMutation.mutateAsync({
         name: store.name,
-        logo: store.logo || undefined,
-        backgroundImage: store.backgroundImage || undefined,
         whatsappNumber: store.whatsappNumber,
       });
       toast.success('Store settings saved successfully!');
@@ -403,49 +395,6 @@ const AdminSettings = () => {
               size="large"
             />
           </div>
-
-          <div className="form-group">
-            <label>Logo</label>
-            <div className="upload-preview">
-              {store.logo && (
-                <img src={resolveImageUrl(store.logo)} alt="Logo" className="preview-logo" />
-              )}
-              <div className="upload-actions">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleUpload(e, 'logo')}
-                  id="logo-upload"
-                  hidden
-                />
-                <label htmlFor="logo-upload" className="upload-btn">
-                  {store.logo ? 'Change Logo' : 'Upload Logo'}
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label>Hero Background Image</label>
-            <p className="settings-field-hint">Displayed on the home page and category hero banners.</p>
-            <div className="upload-preview">
-              {store.backgroundImage && (
-                <img src={resolveImageUrl(store.backgroundImage)} alt="Background" className="preview-bg" />
-              )}
-              <div className="upload-actions">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleUpload(e, 'backgroundImage')}
-                  id="bg-upload"
-                  hidden
-                />
-                <label htmlFor="bg-upload" className="upload-btn">
-                  {store.backgroundImage ? 'Change Background' : 'Upload Background'}
-                </label>
-              </div>
-            </div>
-          </div>
         </section>
 
         <section className="settings-block">
@@ -453,7 +402,8 @@ const AdminSettings = () => {
           <div className="form-group">
             <label>Your WhatsApp Business Number</label>
             <p className="settings-field-hint">
-              The number customers receive order notifications from. Include country code with no spaces or symbols (e.g. <code>919876543210</code> for India).
+              The number customers receive order notifications from. Include country code with no spaces or symbols (e.g.{' '}
+              <code>919876543210</code> for India).
             </p>
             <Input
               value={store.whatsappNumber}
@@ -471,7 +421,7 @@ const AdminSettings = () => {
           {renderWhatsApp()}
         </section>
 
-        <Button type="primary" size="large" onClick={handleSave} loading={saving}>
+        <Button type="primary" size="large" onClick={handleSave} loading={saving} className="settings-save-btn">
           Save Settings
         </Button>
       </motion.div>
