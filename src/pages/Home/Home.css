@@ -259,10 +259,11 @@
 }
 
 /* Category-specific hero — compact on mobile */
+/* Compound selector (0,2,0) beats base .hero-section (0,1,0); !important as final backstop */
 @media (max-width: 767px) {
-  .hero-section--category {
-    height: 200px;
-    min-height: 200px;
+  .hero-section.hero-section--category {
+    height: 220px !important;
+    min-height: 220px !important;
   }
 
   .hero-section--category .hero-category-label {

@@ -69,7 +69,10 @@ const TopNav = () => {
     setAccountOpen((v) => !v);
   };
 
-  const closeMobile = () => setMobileOpen(false);
+  const closeMobile = () => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    setMobileOpen(false);
+  };
 
   return (
     <>
