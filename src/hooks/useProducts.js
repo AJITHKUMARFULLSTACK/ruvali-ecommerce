@@ -3,11 +3,11 @@ import { apiGet } from '../lib/apiClient';
 import { useStore } from '../context/StoreContext';
 
 /**
- * @param {{ categoryId?: string | null, page?: number, limit?: number }} params
+ * @param {{ categoryId?: string | null, page?: number, limit?: number, enabled?: boolean }} params
  */
 export function useProducts(params = {}) {
   const { storeSlug } = useStore();
-  const { categoryId, page = 1, limit = 40 } = params;
+  const { categoryId, page = 1, limit = 40, enabled = true } = params;
 
   const query = useQuery({
     queryKey: ['products', storeSlug, categoryId ?? 'all', page, limit],
@@ -23,11 +23,12 @@ export function useProducts(params = {}) {
         products: data.products ?? [],
         total: data.total ?? 0,
         page: data.page ?? 1,
-        totalPages: data.totalPages ?? 1
+        totalPages: data.totalPages ?? 1,
       };
     },
     staleTime: 1000 * 30,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
+    enabled: enabled && !!storeSlug,
   });
 
   return query;

@@ -34,7 +34,6 @@ export function useCategories() {
       const data = await apiGet(
         `/api/categories?storeSlug=${encodeURIComponent(storeSlug)}`
       );
-      console.log('[useCategories] categories', data);
       return Array.isArray(data) ? data : [];
     },
     staleTime: 1000 * 60,

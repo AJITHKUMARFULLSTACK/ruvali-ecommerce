@@ -95,9 +95,16 @@ const CategoryPage = () => {
     return category;
   }, [category, categories]);
 
-  const { data, isLoading, error } = useProducts(
-    categoryId ? { categoryId, page, limit: 40 } : { page, limit: 40 }
-  );
+  // Wait until categories are loaded before fetching products — prevents a wasted
+  // "all products" fetch that fires before categoryId is known, then gets replaced.
+  const productsEnabled = !effectiveSlug || categoriesLoaded;
+
+  const { data, isLoading, error } = useProducts({
+    categoryId: categoryId || undefined,
+    page,
+    limit: 40,
+    enabled: productsEnabled,
+  });
 
   const products = data?.products ?? [];
   const total = data?.total ?? 0;

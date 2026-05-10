@@ -37,7 +37,25 @@ export function getProductPrimaryImageSource(product) {
   if (!product) return '';
   if (typeof product.image === 'string' && product.image.trim()) return product.image.trim();
 
-  const list = Array.isArray(product.images) ? product.images : [];
+  // Build the candidate list — handle both Array and JSON-string (MySQL TEXT) formats
+  let list = [];
+  if (Array.isArray(product.images)) {
+    list = product.images;
+  } else if (typeof product.images === 'string' && product.images.trim()) {
+    try {
+      const parsed = JSON.parse(product.images);
+      list = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      // Plain string path like "/uploads/products/foo.jpg"
+      return product.images.trim();
+    }
+  }
+
+  // Fall back to relation-loaded productImages array
+  if (list.length === 0 && Array.isArray(product.productImages)) {
+    list = product.productImages;
+  }
+
   const primary =
     list.find((i) => i && (i.isPrimary === true || Number(i.isPrimary) === 1)) || list[0];
   return pickGalleryImageSrc(primary);

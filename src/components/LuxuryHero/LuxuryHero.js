@@ -18,7 +18,7 @@ const LuxuryHero = ({
   const heroImage = image;
 
   return (
-    <section className="hero-section">
+    <section className={`hero-section${!isHome ? ' hero-section--category' : ''}`}>
       <div className="hero-bg" aria-hidden>
         {heroImage ? (
           <img src={heroImage} alt="" className="hero-bg-img" />

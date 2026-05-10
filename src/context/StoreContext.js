@@ -34,7 +34,7 @@ export const StoreProvider = ({ children }) => {
 
   const storeSlug = getStoreSlug(location, DEFAULT_STORE_SLUG);
 
-  const { data: store, isLoading: storeLoading } = useQuery({
+  const { data: store, isLoading } = useQuery({
     queryKey: ['store', storeSlug],
     queryFn: () => apiGet(`/api/store/${storeSlug}`),
     staleTime: 1000 * 60 * 5,
@@ -42,31 +42,14 @@ export const StoreProvider = ({ children }) => {
     enabled: !!storeSlug,
   });
 
-  const { data: products, isLoading: productsLoading } = useQuery({
-    queryKey: ['products', storeSlug],
-    queryFn: async () => {
-      const data = await apiGet(
-        `/api/products?storeSlug=${encodeURIComponent(storeSlug)}`
-      );
-      return Array.isArray(data) ? data : [];
-    },
-    staleTime: 1000 * 60 * 5,
-    refetchOnWindowFocus: false,
-    enabled: !!storeSlug,
-  });
-
-  const productCount = Array.isArray(products) ? products.length : 0;
-  const loading = storeLoading || productsLoading;
-
   const value = useMemo(
     () => ({
       backendUrl: BACKEND_URL,
       storeSlug,
       store,
-      productCount,
-      loading,
+      loading: isLoading,
     }),
-    [storeSlug, store, productCount, loading]
+    [storeSlug, store, isLoading]
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

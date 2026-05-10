@@ -49,13 +49,10 @@ const ProductCard = ({ product, onProductClick }) => {
           alt={product.name}
           className="product-image"
           onError={(e) => {
-            e.target.style.display = 'none';
-            e.target.nextElementSibling.style.display = 'flex';
+            e.target.onerror = null;
+            e.target.src = PLACEHOLDER_PATH;
           }}
         />
-        <div className="product-image-placeholder" style={{ display: 'none' }}>
-          <span>Product Image</span>
-        </div>
         <button 
           className={`favorite-btn ${isFavorite ? 'active' : ''}`}
           onClick={handleFavoriteClick}

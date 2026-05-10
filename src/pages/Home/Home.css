@@ -258,6 +258,26 @@
   padding: 0 40px;
 }
 
+/* Category-specific hero — compact on mobile */
+@media (max-width: 767px) {
+  .hero-section--category {
+    height: 200px;
+    min-height: 200px;
+  }
+
+  .hero-section--category .hero-category-label {
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding: 0 16px 16px;
+  }
+
+  .hero-section--category .hero-category-name {
+    font-size: 2rem;
+    text-align: left;
+    padding: 0;
+  }
+}
+
 .curated-section {
   max-width: 1440px;
   margin: 80px auto;

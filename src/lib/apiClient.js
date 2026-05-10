@@ -233,10 +233,7 @@ async function handleResponse(res, meta = {}) {
 /** Admin auth: POST JSON { email, password } */
 export const ADMIN_LOGIN_PATH = '/api/admin/login';
 
-export function logApiCall(path) {
-  // eslint-disable-next-line no-console -- intentional: trace outbound API URLs
-  console.log('API CALL:', `${getApiBaseUrl()}${path}`);
-}
+function logApiCall() {}
 
 /**
  * Backend fetch returning the raw Response (streaming bodies, blobs).
