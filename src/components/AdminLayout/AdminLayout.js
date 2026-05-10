@@ -69,13 +69,6 @@ const AdminLayout = ({ children }) => {
           <h1 className="admin-layout-store-name">
             {store?.name || 'Store'}
           </h1>
-          {store?.primaryColor && (
-            <div
-              className="admin-layout-theme-preview"
-              style={{ backgroundColor: store.primaryColor }}
-              title="Primary color"
-            />
-          )}
         </header>
 
         <motion.main

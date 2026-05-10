@@ -56,7 +56,7 @@ const Hero = ({ image, images, title, subtitle, isHome = false, logo: customLogo
                     </p>
                   </div>
                   <div className="hero-cta-row">
-                    <Link to="/c" className="hero-cta hero-cta--ghost">Rave design 2026</Link>
+                    <Link to="/c" className="hero-cta hero-cta--ghost">Latest Arrivals</Link>
                     <Link to="/c" className="hero-cta hero-cta--primary">Discover the Collection</Link>
                   </div>
                 </div>

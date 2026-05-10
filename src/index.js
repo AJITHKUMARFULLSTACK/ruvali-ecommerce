@@ -9,7 +9,7 @@ const queryClient = new QueryClient();
 
 const antdTheme = {
   token: {
-    colorPrimary: '#ff0000',
+    colorPrimary: '#CC0000',
     borderRadius: 8,
   },
 };

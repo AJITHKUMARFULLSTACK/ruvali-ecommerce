@@ -16,11 +16,11 @@ const STATUS_LABELS = {
 };
 
 const STATUS_COLORS = {
-  PLACED: '#f59e0b',
-  CONFIRMED: '#3b82f6',
-  PACKED: '#8b5cf6',
-  SHIPPED: '#06b6d4',
-  DELIVERED: '#22c55e'
+  PLACED: '#3b82f6',
+  CONFIRMED: '#f97316',
+  PACKED: '#06b6d4',
+  SHIPPED: '#8b5cf6',
+  DELIVERED: '#22c55e',
 };
 
 const MyOrders = () => {

@@ -32,6 +32,14 @@ const TopNav = () => {
     setAccountOpen(false);
   }, [location.pathname]);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileOpen]);
+
   useEffect(() => {
     const onDocClick = (e) => {
       const t = e.target;
@@ -60,6 +68,8 @@ const TopNav = () => {
     }
     setAccountOpen((v) => !v);
   };
+
+  const closeMobile = () => setMobileOpen(false);
 
   return (
     <>
@@ -136,7 +146,12 @@ const TopNav = () => {
             )}
           </div>
 
-          <button className="top-nav-cart-btn" type="button" onClick={() => navigate('/cart')} aria-label={`Cart (${cartCount} items)`}>
+          <button
+            className="top-nav-cart-btn"
+            type="button"
+            onClick={() => navigate('/cart')}
+            aria-label={`Cart (${cartCount} items)`}
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
               <line x1="3" y1="6" x2="21" y2="6" />
@@ -148,7 +163,7 @@ const TopNav = () => {
           <button
             className="top-nav-toggle"
             onClick={() => setMobileOpen((v) => !v)}
-            aria-label="Open menu"
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}
             type="button"
           >
@@ -159,53 +174,92 @@ const TopNav = () => {
         </div>
       </div>
 
+      {/* Mobile slide-in drawer — always in DOM so CSS transitions work on both open and close */}
       <div
         className={`top-nav-mobile ${mobileOpen ? 'top-nav-mobile--open' : ''}`}
-        hidden={!mobileOpen}
+        aria-hidden={!mobileOpen}
       >
-        <div className="top-nav-mobile-backdrop" onClick={() => setMobileOpen(false)} />
-        <div className="top-nav-mobile-panel" role="dialog" aria-label="Mobile navigation">
-          <button className="top-nav-mobile-close" type="button" aria-label="Close menu" onClick={() => setMobileOpen(false)}>
-            <span />
-            <span />
-          </button>
-          <div className="top-nav-mobile-links">
-            {isCategoriesLoading
-              ? null
-              : topCategories.map((cat) => (
-                  <NavLink
-                    key={cat.id}
-                    to={`/c/${cat.slug || cat.id}`}
-                    className={({ isActive }) => `top-nav-mobile-link ${isActive ? 'active' : ''}`}
-                  >
-                    {cat.name}
-                  </NavLink>
-                ))}
-            <NavLink to="/donate" className={({ isActive }) => `top-nav-mobile-link ${isActive ? 'active' : ''}`}>
+        <div className="top-nav-mobile-backdrop" onClick={closeMobile} />
+        <div
+          className="top-nav-mobile-panel"
+          role="dialog"
+          aria-label="Mobile navigation"
+          aria-modal="true"
+        >
+          <div className="top-nav-mobile-header">
+            <span className="top-nav-mobile-brand">RUVALI</span>
+            <button
+              className="top-nav-mobile-close"
+              type="button"
+              aria-label="Close menu"
+              onClick={closeMobile}
+            >
+              &#x2715;
+            </button>
+          </div>
+
+          <div className="top-nav-mobile-divider" />
+
+          <nav className="top-nav-mobile-links">
+            {!isCategoriesLoading &&
+              topCategories.map((cat) => (
+                <NavLink
+                  key={cat.id}
+                  to={`/c/${cat.slug || cat.id}`}
+                  className={({ isActive }) => `top-nav-mobile-link ${isActive ? 'active' : ''}`}
+                  onClick={closeMobile}
+                >
+                  {cat.name}
+                </NavLink>
+              ))}
+
+            <div className="top-nav-mobile-divider" />
+
+            <NavLink
+              to="/donate"
+              className={({ isActive }) => `top-nav-mobile-link ${isActive ? 'active' : ''}`}
+              onClick={closeMobile}
+            >
               Donate
             </NavLink>
-            <NavLink to="/about" className={({ isActive }) => `top-nav-mobile-link ${isActive ? 'active' : ''}`}>
+            <NavLink
+              to="/about"
+              className={({ isActive }) => `top-nav-mobile-link ${isActive ? 'active' : ''}`}
+              onClick={closeMobile}
+            >
               About
             </NavLink>
-            {!isLoggedIn ? (
-              <NavLink to="/account/login" className={({ isActive }) => `top-nav-mobile-link ${isActive ? 'active' : ''}`}>
-                Login
-              </NavLink>
-            ) : (
-              <>
-                <NavLink to="/account/orders" className={({ isActive }) => `top-nav-mobile-link ${isActive ? 'active' : ''}`}>
-                  My Orders
-                </NavLink>
-                <button
-                  type="button"
-                  className="top-nav-mobile-link top-nav-mobile-logout"
-                  onClick={() => logout()}
-                >
-                  Logout
-                </button>
-              </>
+
+            <div className="top-nav-mobile-divider" />
+
+            <NavLink
+              to={isLoggedIn ? '/account/orders' : '/account/login'}
+              className={({ isActive }) => `top-nav-mobile-link ${isActive ? 'active' : ''}`}
+              onClick={closeMobile}
+            >
+              My Account
+            </NavLink>
+            <NavLink
+              to="/track-order"
+              className={({ isActive }) => `top-nav-mobile-link ${isActive ? 'active' : ''}`}
+              onClick={closeMobile}
+            >
+              Track Order
+            </NavLink>
+
+            {isLoggedIn && (
+              <button
+                type="button"
+                className="top-nav-mobile-link top-nav-mobile-logout"
+                onClick={() => {
+                  logout();
+                  closeMobile();
+                }}
+              >
+                Logout
+              </button>
             )}
-          </div>
+          </nav>
         </div>
       </div>
     </>

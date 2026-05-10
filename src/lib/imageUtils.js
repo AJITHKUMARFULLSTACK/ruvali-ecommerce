@@ -7,17 +7,25 @@ function getPlaceholderPath() {
   return `${pub.replace(/\/$/, '')}/placeholder.svg`;
 }
 
-const PLACEHOLDER_PATH = getPlaceholderPath();
+export const PLACEHOLDER_PATH = getPlaceholderPath();
 
-/** Raw item from backend gallery: prefer `fullImageUrl`, then `imageUrl`, then legacy fields. */
+/**
+ * Raw item from backend gallery: prefer relative `imageUrl` over `fullImageUrl`.
+ *
+ * The backend builds `fullImageUrl` by prepending PUBLIC_BASE_URL, which is the
+ * *frontend* domain (ruvali.co.in), not the backend API domain (api.ruvali.co.in).
+ * Using `fullImageUrl` therefore produces a URL pointing at the wrong host and 404s.
+ * By preferring the relative `imageUrl` ("/uploads/products/foo.jpg"), we let
+ * `resolveImageUrl` below prepend `apiBaseUrl` — the correct backend origin.
+ */
 export function pickGalleryImageSrc(item) {
   if (item == null) return '';
   if (typeof item === 'string') return item.trim();
   if (typeof item === 'object') {
-    const fu = typeof item.fullImageUrl === 'string' ? item.fullImageUrl.trim() : '';
-    if (fu) return fu;
     const iu = typeof item.imageUrl === 'string' ? item.imageUrl.trim() : '';
     if (iu) return iu;
+    const fu = typeof item.fullImageUrl === 'string' ? item.fullImageUrl.trim() : '';
+    if (fu) return fu;
     const u = typeof item.url === 'string' ? item.url.trim() : '';
     return u || '';
   }
@@ -37,10 +45,13 @@ export function getProductPrimaryImageSource(product) {
 
 /**
  * Resolves image URLs for display.
- * Accepts strings or `{ fullImageUrl, imageUrl }` from product_images APIs.
+ * Accepts strings or `{ imageUrl, fullImageUrl }` objects from product_images APIs.
  *
- * Full http(s) URLs pass through unchanged.
- * Paths starting `/uploads/` are prefixed with the API base URL.
+ * - Full http(s) URLs pass through unchanged.
+ * - Relative paths starting with `/uploads/` are prefixed with the backend API base
+ *   URL so the browser fetches them from the correct origin (api.ruvali.co.in, not
+ *   the frontend ruvali.co.in).
+ * - Anything else (CRA public-folder paths like "/logo.png") passes through as-is.
  */
 export function resolveImageUrl(urlOrObj) {
   const raw =
@@ -55,7 +66,8 @@ export function resolveImageUrl(urlOrObj) {
   }
 
   if (trimmed.startsWith('/uploads/')) {
-    return `${apiBaseUrl}${encodeURI(trimmed.startsWith('/') ? trimmed : `/${trimmed}`)}`;
+    return `${apiBaseUrl}${trimmed}`;
   }
+
   return trimmed;
 }

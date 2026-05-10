@@ -160,7 +160,7 @@
   justify-content: center;
 }
 
-/* Mobile toggle */
+/* Mobile toggle — hidden on desktop */
 .top-nav-toggle {
   display: none;
   flex-direction: column;
@@ -272,7 +272,12 @@
   }
 }
 
-/* Mobile overlay menu */
+/* ============================================
+   Mobile slide-in drawer overlay
+   Always in DOM — CSS controls open/close so
+   transitions work in both directions.
+   ============================================ */
+
 .top-nav-mobile {
   position: fixed;
   inset: 0;
@@ -299,7 +304,7 @@
   background: color-mix(in srgb, var(--bg) 96%, transparent);
   border-left: 1px solid var(--border);
   transform: translateX(100%);
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   padding: 20px 20px 28px;
@@ -319,6 +324,17 @@
   transform: translateX(0);
 }
 
+/* Header — hidden at desktop sizes */
+.top-nav-mobile-header {
+  display: none;
+}
+
+/* Divider — hidden at desktop sizes */
+.top-nav-mobile-divider {
+  display: none;
+}
+
+/* Desktop close button (cross built from two spans) */
 .top-nav-mobile-close {
   align-self: flex-end;
   width: 44px;
@@ -388,4 +404,234 @@
 .top-nav-mobile-logout {
   cursor: pointer;
   border: 1px solid transparent;
+}
+
+/* ============================================
+   MOBILE OVERRIDES — max-width: 767px only
+   Desktop (768px+) is completely unchanged.
+   ============================================ */
+
+@media (max-width: 767px) {
+  /* ---- Navbar bar ---- */
+
+  .top-nav-wrapper {
+    background: #ffffff !important;
+    height: 56px;
+    padding: 0 16px;
+    align-items: center;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+  }
+
+  .top-nav-logo {
+    height: 56px;
+    max-width: 130px;
+    overflow: hidden;
+  }
+
+  .top-nav-logo img {
+    height: 26px;
+    max-width: 120px;
+    width: auto;
+    object-fit: contain;
+    object-position: left center;
+  }
+
+  /* Hide floating pill */
+  .top-nav-pill-anchor {
+    display: none;
+  }
+
+  .top-nav-right {
+    height: 56px;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  /* Show account button on mobile (was hidden in previous session) */
+  .top-nav-account {
+    display: flex;
+  }
+
+  /* Flat icon buttons — dark so visible on white background */
+  .top-nav-account-btn,
+  .top-nav-cart-btn {
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    color: #1a1a1a;
+    padding: 6px;
+  }
+
+  /* Hamburger — always dark so visible on any page background */
+  .top-nav-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 5px;
+    width: 36px;
+    height: 36px;
+    padding: 6px;
+  }
+
+  .top-nav-toggle span {
+    background: #1a1a1a;
+    width: 20px;
+    height: 2px;
+  }
+
+  /* ---- Mobile drawer ---- */
+
+  .top-nav-mobile {
+    z-index: 1200;
+  }
+
+  /* Backdrop: semi-transparent dark, no blur */
+  .top-nav-mobile-backdrop {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* Drawer panel: 280px from right edge, solid white */
+  .top-nav-mobile-panel {
+    width: 280px;
+    background: #ffffff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-left: 1px solid #e8e8e8;
+    padding: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Drawer header row */
+  .top-nav-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px 0 20px;
+    height: 56px;
+    flex-shrink: 0;
+  }
+
+  .top-nav-mobile-brand {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: #1a1a1a;
+    text-transform: uppercase;
+  }
+
+  /* Divider lines */
+  .top-nav-mobile-divider {
+    display: block;
+    height: 1px;
+    background: #e8e8e8;
+    flex-shrink: 0;
+    margin: 0;
+  }
+
+  /* Close button — simple × character */
+  .top-nav-mobile-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: unset;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #e0e0e0;
+    background: #f5f5f5;
+    cursor: pointer;
+    font-size: 16px;
+    color: #1a1a1a;
+    font-family: inherit;
+    position: static;
+  }
+
+  /* Hide the span-based cross — we use ✕ text in the button now */
+  .top-nav-mobile-close span {
+    display: none;
+  }
+
+  /* Links list */
+  .top-nav-mobile-links {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0;
+    padding: 0;
+  }
+
+  /* Each menu item */
+  .top-nav-mobile-link {
+    height: 52px;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #1a1a1a;
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+    background: transparent;
+    opacity: 1;
+    text-decoration: none;
+    width: 100%;
+  }
+
+  .top-nav-mobile-link:hover {
+    background: #f5f5f5;
+    border-color: #f0f0f0;
+    color: #1a1a1a;
+    opacity: 1;
+  }
+
+  .top-nav-mobile-link.active {
+    color: #CC0000;
+    background: transparent;
+    border-bottom-color: #f0f0f0;
+    opacity: 1;
+  }
+
+  /* Logout button */
+  .top-nav-mobile-logout {
+    height: 52px;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: left;
+    color: #888888;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+    border-radius: 0;
+    cursor: pointer;
+    width: 100%;
+    opacity: 1;
+  }
+
+  .top-nav-mobile-logout:hover {
+    background: #f5f5f5;
+  }
 }

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Form, Input, Button, Radio, Spin, Alert } from 'antd';
+import { Button, Radio, Spin, Alert } from 'antd';
 import { useCart } from '../../context/CartContext';
 import { useStore } from '../../context/StoreContext';
-import { resolveImageUrl, getProductPrimaryImageSource } from '../../lib/imageUtils';
+import { resolveImageUrl, getProductPrimaryImageSource, PLACEHOLDER_PATH } from '../../lib/imageUtils';
 import { apiPost } from '../../lib/apiClient';
 import { isTesting } from '../../config';
 import './Payment.css';
@@ -12,17 +12,12 @@ import './Payment.css';
 const Payment = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { orderDetails, saveOrderDetails } = useCart();
+  const { orderDetails, saveOrderDetails, clearCart } = useCart();
   const { storeSlug } = useStore();
   const [orderData, setOrderData] = useState(null);
   const [orderError, setOrderError] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('card');
-  const [cardDetails, setCardDetails] = useState({
-    cardNumber: '',
-    cardName: '',
-    expiryDate: '',
-    cvv: '',
-  });
+  const [paymentMethod, setPaymentMethod] = useState('razorpay');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const data = location.state?.orderData || orderDetails;
@@ -33,37 +28,24 @@ const Payment = () => {
     setOrderData(data);
   }, [location.state, orderDetails, navigate]);
 
-  const handleCardInputChange = (e) => {
-    const { name, value } = e.target;
-    if (name === 'cardNumber') {
-      const formatted = value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
-      setCardDetails({ ...cardDetails, [name]: formatted });
-    } else {
-      setCardDetails({ ...cardDetails, [name]: value });
-    }
-  };
-
-  const handlePayment = async (e) => {
-    if (e?.preventDefault) e.preventDefault();
+  const handlePayment = async () => {
     setOrderError(null);
+    setIsSubmitting(true);
 
     const subtotal =
-      (typeof orderData.totalAmount === 'number' ? orderData.totalAmount : Number(orderData.totalAmount)) ||
-      (orderData.items || []).reduce(
-        (sum, i) => sum + (Number(i.price || i.product?.price || 0) * Number(i.quantity || 1)),
-        0
-      );
+      typeof orderData.totalAmount === 'number'
+        ? orderData.totalAmount
+        : Number(orderData.totalAmount) || 0;
     const totalWithShipping = subtotal + 100;
-    const orderItems = orderData.items
-      ? orderData.items.map((i) => ({ productId: i.productId, quantity: i.quantity }))
-      : [{ productId: orderData.product?.id, quantity: orderData.quantity || 1 }];
-
+    const orderItems = orderData.items.map((i) => ({
+      productId: i.productId,
+      quantity: i.quantity,
+    }));
     const customer = {
       name: orderData.shippingAddress?.fullName || 'Customer',
       phone: orderData.shippingAddress?.phone || '',
     };
 
-    // COD: use existing flow (no Razorpay)
     if (paymentMethod === 'cod') {
       try {
         const data = await apiPost(
@@ -75,6 +57,7 @@ const Payment = () => {
             shippingAmount: 100,
           }
         );
+        clearCart();
         const paymentData = {
           ...orderData,
           paymentMethod: 'cod',
@@ -86,13 +69,13 @@ const Payment = () => {
       } catch (err) {
         console.error('[Payment] COD failed', err);
         setOrderError(err.message || 'We could not place your order. Please try again.');
+        setIsSubmitting(false);
       }
       return;
     }
 
-    // Card / UPI: Razorpay flow
+    // Razorpay flow
     try {
-      console.log('[Razorpay] calling create with amount:', totalWithShipping);
       let createData;
       try {
         createData = await apiPost(
@@ -101,15 +84,18 @@ const Payment = () => {
         );
       } catch (e) {
         setOrderError(e.data?.error?.message || e.message || 'We could not start payment. Please try again.');
+        setIsSubmitting(false);
         return;
       }
-      console.log('[Razorpay] create response:', createData);
+
       if (!createData?.orderId) {
         setOrderError('Could not initiate payment. Please try again.');
+        setIsSubmitting(false);
         return;
       }
       if (!window.Razorpay) {
         setOrderError('Payment system failed to load. Please refresh the page and try again.');
+        setIsSubmitting(false);
         return;
       }
 
@@ -125,10 +111,9 @@ const Payment = () => {
           contact: orderData.shippingAddress?.phone,
           email: orderData.shippingAddress?.email,
         },
-        theme: { color: '#000000' },
+        theme: { color: '#CC0000' },
         handler: async function (paymentResponse) {
           try {
-            console.log('[Razorpay] payment success, calling verify');
             const verifyData = await apiPost(
               `/api/orders/razorpay/verify?storeSlug=${encodeURIComponent(storeSlug)}`,
               {
@@ -141,10 +126,10 @@ const Payment = () => {
                 shippingAmount: 100,
               }
             );
-            console.log('[Razorpay] verify response:', verifyData);
+            clearCart();
             const paymentData = {
               ...orderData,
-              paymentMethod,
+              paymentMethod: 'razorpay',
               paymentStatus: 'PAID',
               backendOrder: verifyData,
             };
@@ -155,32 +140,41 @@ const Payment = () => {
             setOrderError(
               err.data?.error?.message || err.message || 'Payment verification failed. Please contact support.'
             );
+            setIsSubmitting(false);
           }
         },
         modal: {
           ondismiss: function () {
-            console.log('[Razorpay] popup dismissed by user');
-            setOrderError('Payment was cancelled. Please try again.');
+            setOrderError('Payment was cancelled. You can try again.');
+            setIsSubmitting(false);
           },
         },
       };
-      console.log('[Razorpay] opening popup with orderId:', createData.orderId);
+
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (err) {
-      console.log('[Razorpay] error:', err);
-      console.error('[Payment] Razorpay create failed', err);
+      console.error('[Payment] Razorpay failed', err);
       setOrderError('We could not start payment. Please try again.');
+      setIsSubmitting(false);
     }
   };
 
   if (!orderData) {
     return (
-      <div className="payment-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+      <div
+        className="payment-page"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}
+      >
         <Spin size="large" />
       </div>
     );
   }
+
+  const subtotal =
+    typeof orderData.totalAmount === 'number'
+      ? orderData.totalAmount
+      : Number(orderData.totalAmount) || 0;
 
   return (
     <motion.div
@@ -195,7 +189,7 @@ const Payment = () => {
         {isTesting && (
           <Alert
             type="info"
-            message="Test mode — use card 4111 1111 1111 1111, any future expiry, any CVV"
+            message="Test mode — Razorpay test credentials active"
             showIcon
             style={{ marginBottom: 24 }}
           />
@@ -208,38 +202,27 @@ const Payment = () => {
         <div className="payment-content">
           <div className="order-summary-section">
             <h2>Order Summary</h2>
-            {orderData.items ? (
-              orderData.items.map((item) => {
-                const raw = getProductPrimaryImageSource(item.product);
-                const img = raw ? resolveImageUrl(raw) : '';
-                return (
-                  <div key={item.productId} className="order-item">
-                    <img src={img} alt={item.product?.name} />
-                    <div>
-                      <h3>{item.product?.name}</h3>
-                      <p>Quantity: {item.quantity}</p>
-                      <p>
-                        Price: ₹
-                        {(Number(item.product?.price) || Number(item.price) || 0).toLocaleString('en-IN')} each
-                      </p>
-                    </div>
+            {orderData.items.map((item) => {
+              const raw = getProductPrimaryImageSource(item.product);
+              const img = raw ? resolveImageUrl(raw) : PLACEHOLDER_PATH;
+              return (
+                <div key={item.productId} className="order-item">
+                  <img src={img} alt={item.product?.name} />
+                  <div>
+                    <h3>{item.product?.name}</h3>
+                    <p>Quantity: {item.quantity}</p>
+                    <p>
+                      Price: ₹
+                      {(Number(item.product?.price) || Number(item.price) || 0).toLocaleString('en-IN')} each
+                    </p>
                   </div>
-                );
-              })
-            ) : (
-              <div className="order-item">
-                <img src={orderData.product?.image ? resolveImageUrl(orderData.product.image) : ''} alt={orderData.product?.name} />
-                <div>
-                  <h3>{orderData.product?.name}</h3>
-                  <p>Quantity: {orderData.quantity}</p>
-                  <p>Price: ₹{orderData.product?.price?.toLocaleString('en-IN')}</p>
                 </div>
-              </div>
-            )}
+              );
+            })}
             <div className="order-totals">
               <div className="total-row">
                 <span>Subtotal</span>
-                <span>₹{orderData.totalAmount.toLocaleString('en-IN')}</span>
+                <span>₹{subtotal.toLocaleString('en-IN')}</span>
               </div>
               <div className="total-row">
                 <span>Shipping</span>
@@ -247,7 +230,7 @@ const Payment = () => {
               </div>
               <div className="total-row total-final">
                 <span>Total</span>
-                <span>₹{(orderData.totalAmount + 100).toLocaleString('en-IN')}</span>
+                <span>₹{(subtotal + 100).toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
@@ -259,80 +242,39 @@ const Payment = () => {
               onChange={(e) => setPaymentMethod(e.target.value)}
               className="payment-methods-antd"
             >
-              <Radio.Button value="card">Credit/Debit Card</Radio.Button>
-              <Radio.Button value="upi">UPI</Radio.Button>
+              <Radio.Button value="razorpay">Pay Online</Radio.Button>
               <Radio.Button value="cod">Cash on Delivery</Radio.Button>
             </Radio.Group>
 
-            {paymentMethod === 'card' && (
-              <Form onFinish={handlePayment} layout="vertical" className="card-form">
-                <Form.Item name="cardNumber" rules={[{ required: true }]} label="Card Number">
-                  <Input
-                    placeholder="1234 5678 9012 3456"
-                    maxLength={19}
-                    onChange={(e) => {
-                      const v = e.target.value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
-                      setCardDetails((d) => ({ ...d, cardNumber: v }));
-                    }}
-                    value={cardDetails.cardNumber}
-                    size="large"
-                  />
-                </Form.Item>
-                <Form.Item name="cardName" rules={[{ required: true }]} label="Cardholder Name">
-                  <Input
-                    placeholder="John Doe"
-                    onChange={(e) => setCardDetails((d) => ({ ...d, cardName: e.target.value }))}
-                    value={cardDetails.cardName}
-                    size="large"
-                  />
-                </Form.Item>
-                <Form.Item style={{ marginBottom: 0 }}>
-                  <div className="form-row">
-                    <Form.Item name="expiryDate" rules={[{ required: true }]} label="Expiry" style={{ flex: 1, marginRight: 12 }}>
-                      <Input
-                        placeholder="MM/YY"
-                        maxLength={5}
-                        onChange={(e) => setCardDetails((d) => ({ ...d, expiryDate: e.target.value }))}
-                        value={cardDetails.expiryDate}
-                        size="large"
-                      />
-                    </Form.Item>
-                    <Form.Item name="cvv" rules={[{ required: true }]} label="CVV" style={{ flex: 1 }}>
-                      <Input
-                        placeholder="123"
-                        maxLength={4}
-                        onChange={(e) => setCardDetails((d) => ({ ...d, cvv: e.target.value }))}
-                        value={cardDetails.cvv}
-                        size="large"
-                      />
-                    </Form.Item>
-                  </div>
-                </Form.Item>
-                <Form.Item>
-                  <Button type="primary" htmlType="submit" size="large" block className="pay-now-btn">
-                    Pay ₹{(orderData.totalAmount + 100).toLocaleString('en-IN')}
-                  </Button>
-                </Form.Item>
-              </Form>
-            )}
-
-            {paymentMethod === 'upi' && (
-              <Form onFinish={handlePayment} layout="vertical" className="upi-form">
-                <Form.Item name="upiId" rules={[{ required: true }]} label="UPI ID">
-                  <Input placeholder="yourname@upi" size="large" />
-                </Form.Item>
-                <Form.Item>
-                  <Button type="primary" htmlType="submit" size="large" block className="pay-now-btn">
-                    Pay ₹{(orderData.totalAmount + 100).toLocaleString('en-IN')}
-                  </Button>
-                </Form.Item>
-              </Form>
+            {paymentMethod === 'razorpay' && (
+              <div className="razorpay-info">
+                <p style={{ color: '#666', marginBottom: 16, fontSize: 14 }}>
+                  Pay securely via Razorpay — accepts cards, UPI, netbanking, and wallets.
+                </p>
+                <Button
+                  type="primary"
+                  size="large"
+                  block
+                  onClick={handlePayment}
+                  loading={isSubmitting}
+                  className="pay-now-btn"
+                >
+                  Pay ₹{(subtotal + 100).toLocaleString('en-IN')}
+                </Button>
+              </div>
             )}
 
             {paymentMethod === 'cod' && (
               <div className="cod-info">
-                <p>Pay ₹{(orderData.totalAmount + 100).toLocaleString('en-IN')} when your order arrives.</p>
-                <Button type="primary" size="large" block onClick={handlePayment} className="pay-now-btn">
+                <p>Pay ₹{(subtotal + 100).toLocaleString('en-IN')} when your order arrives.</p>
+                <Button
+                  type="primary"
+                  size="large"
+                  block
+                  onClick={handlePayment}
+                  loading={isSubmitting}
+                  className="pay-now-btn"
+                >
                   Confirm Order
                 </Button>
               </div>

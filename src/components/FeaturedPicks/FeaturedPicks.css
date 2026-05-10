@@ -1,6 +1,7 @@
 .featured-picks {
   padding: 80px 40px;
-  background-color: var(--bg);
+  background-color: #ffffff;
+  color: #111111;
 }
 
 .featured-picks-container {
@@ -12,7 +13,7 @@
   font-family: 'Outfit', sans-serif;
   font-size: 36px;
   font-weight: 600;
-  color: var(--text);
+  color: #111111;
   margin-bottom: 40px;
   text-transform: uppercase;
   letter-spacing: 2px;

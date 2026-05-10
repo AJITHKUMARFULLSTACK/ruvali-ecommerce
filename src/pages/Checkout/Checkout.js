@@ -4,14 +4,14 @@ import { motion } from 'framer-motion';
 import { Form, Input, Button, Row, Col } from 'antd';
 import { useCart } from '../../context/CartContext';
 import { useCustomer } from '../../context/CustomerContext';
-import { resolveImageUrl, getProductPrimaryImageSource } from '../../lib/imageUtils';
+import { resolveImageUrl, getProductPrimaryImageSource, PLACEHOLDER_PATH } from '../../lib/imageUtils';
 import { TOP_NAV_HEIGHT } from '../../components/TopNav/TopNav';
 import './Checkout.css';
 
 const Checkout = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
-  const { cartItems, getCartTotal, saveOrderDetails, clearCart } = useCart();
+  const { cartItems, getCartTotal, saveOrderDetails } = useCart();
   const { customer } = useCustomer();
 
   useEffect(() => {
@@ -43,7 +43,6 @@ const Checkout = () => {
       orderDate: new Date().toISOString(),
     };
     saveOrderDetails(orderData);
-    clearCart();
     navigate('/payment', { state: { orderData } });
   };
 
@@ -122,7 +121,7 @@ const Checkout = () => {
                 {cartItems.map((item) => {
                   const imgUrl = rawImage(item)
                     ? resolveImageUrl(rawImage(item))
-                    : `https://api.lorem.space/image/fashion?w=80&h=80&hash=${item.id}`;
+                    : PLACEHOLDER_PATH;
                   return (
                     <div key={item.id} className="checkout-item">
                       <img src={imgUrl} alt={item.name} />

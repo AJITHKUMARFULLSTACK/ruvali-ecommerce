@@ -2,4 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  /* Explicit white background so no dark theme variable can bleed into content. */
+  background-color: #ffffff;
+  color: #111111;
 }

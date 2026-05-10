@@ -4,10 +4,13 @@ import { Form, Input, Button } from 'antd';
 import { TOP_NAV_HEIGHT } from '../../components/TopNav/TopNav';
 import landingBg from '../../Assets/Images/landingpageBg.png';
 import { toast } from '../../lib/toast';
+import { useStore } from '../../context/StoreContext';
 import './Contact.css';
 
 const Contact = () => {
   const [form] = Form.useForm();
+  const { store } = useStore();
+  const displayPhone = store?.whatsappNumber || '+91 98765 43210';
 
   const handleSubmit = (values) => {
     toast.success('Thank you! We\'ll get back to you soon.');
@@ -44,7 +47,7 @@ const Contact = () => {
               <div className="contact-left-info">
                 <div className="contact-info-row">
                   <div className="contact-icon-circle">📞</div>
-                  <span className="contact-info-text">+91 9999999999</span>
+                  <span className="contact-info-text">{displayPhone}</span>
                 </div>
                 <div className="contact-info-row">
                   <div className="contact-icon-circle">✉️</div>
@@ -84,7 +87,7 @@ const Contact = () => {
             </Form.Item>
             <Form.Item>
               <Button type="primary" htmlType="submit" size="large" className="submit-button">
-                Discover More
+                Send Message
               </Button>
             </Form.Item>
           </Form>

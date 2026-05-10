@@ -1,12 +1,11 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Pagination } from 'antd';
 import LuxuryHero from '../../components/LuxuryHero/LuxuryHero';
 import { TOP_NAV_HEIGHT } from '../../components/TopNav/TopNav';
 import ProductCard from '../../components/ProductCard/ProductCard';
 import ProductDetail from '../../components/ProductDetail/ProductDetail';
-import CheckoutModal from '../../components/CheckoutModal/CheckoutModal';
 import CategorySidebar from '../../components/CategorySidebar/CategorySidebar';
 import Breadcrumbs, { buildBreadcrumbItems } from '../../components/Breadcrumbs/Breadcrumbs';
 import ProductCardSkeleton from '../../components/ProductCardSkeleton/ProductCardSkeleton';
@@ -22,6 +21,7 @@ import './CategoryPage.css';
 
 const CategoryPage = () => {
   const { slug, parentSlug, subSlug } = useParams();
+  const navigate = useNavigate();
   const effectiveSlug = parentSlug ?? slug;
   const effectiveSubSlug = subSlug;
   const categorySlug = effectiveSlug;
@@ -30,8 +30,7 @@ const CategoryPage = () => {
   const [splashDone, setSplashDone] = useState(false);
   const [splashVisible, setSplashVisible] = useState(shouldShowSplash);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [checkoutData, setCheckoutData] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const gridRef = useRef(null);
 
@@ -50,6 +49,13 @@ const CategoryPage = () => {
   }, [categories, effectiveSlug, effectiveSubSlug]);
 
   const categoryId = category?.id ?? null;
+  const categoriesLoaded = categories.length > 0;
+
+  useEffect(() => {
+    if (effectiveSlug && categoriesLoaded && !category) {
+      navigate('/c', { replace: true });
+    }
+  }, [effectiveSlug, categoriesLoaded, category, navigate]);
 
   useEffect(() => {
     setPage(1);
@@ -162,25 +168,6 @@ const CategoryPage = () => {
             </motion.p>
           </div>
 
-          <motion.div
-            className="category-splash-scroll-hint"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: splashDone ? 0 : 1 }}
-            transition={{ duration: 0.4, delay: 0.8 }}
-          >
-            <div className="category-splash-scroll-line">
-              <motion.div
-                className="category-splash-scroll-dot"
-                animate={{ y: [0, 24, 0] }}
-                transition={{
-                  duration: 1.2,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-              />
-            </div>
-            <span className="category-splash-scroll-text">SCROLL TO EXPLORE</span>
-          </motion.div>
         </motion.div>
       )}
 
@@ -191,14 +178,23 @@ const CategoryPage = () => {
       />
 
       <div className="category-page-container luxury-content-spacer" style={{ paddingTop: TOP_NAV_HEIGHT }}>
-        <CategorySidebar
-          categories={categories}
-          parentCategory={parentCategory}
-          title="Browse"
-          activeCategoryId={categoryId}
-        />
+        <div className={`category-sidebar-wrapper${showFilters ? ' sidebar-open' : ''}`}>
+          <CategorySidebar
+            categories={categories}
+            parentCategory={parentCategory}
+            title="Browse"
+            activeCategoryId={categoryId}
+          />
+        </div>
 
         <main className="category-page-main">
+          <button
+            className="category-filter-toggle"
+            type="button"
+            onClick={() => setShowFilters((v) => !v)}
+          >
+            {showFilters ? 'Hide Filters' : 'Show Filters'}
+          </button>
           <ScrollReveal>
             <Breadcrumbs items={breadcrumbItems} />
           </ScrollReveal>
@@ -267,19 +263,6 @@ const CategoryPage = () => {
         product={selectedProduct}
         isOpen={!!selectedProduct}
         onClose={() => setSelectedProduct(null)}
-        onBuyNow={(product, quantity, color) => {
-          setSelectedProduct(null);
-          setCheckoutData({ product, quantity, color });
-          setIsCheckoutOpen(true);
-        }}
-      />
-
-      <CheckoutModal
-        isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
-        product={checkoutData?.product}
-        quantity={checkoutData?.quantity}
-        selectedColor={checkoutData?.color}
       />
     </div>
   );

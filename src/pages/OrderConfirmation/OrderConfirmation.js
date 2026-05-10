@@ -56,31 +56,20 @@ const OrderConfirmation = () => {
 
             <ScrollReveal delay={0.1}>
               <div>
-                {orderData.items ? (
-                  orderData.items.map((item) => {
-                    const img = item.product?.image || item.product?.images?.[0];
-                    const price = typeof item.product?.price === 'number' ? item.product.price : Number(item.product?.price || 0);
-                    return (
-                      <div key={item.productId} className="order-product">
-                        <img src={img ? resolveImageUrl(img) : ''} alt={item.product?.name} />
-                        <div>
-                          <h3>{item.product?.name}</h3>
-                          <p>Quantity: {item.quantity}</p>
-                          <p>Price: ₹{price.toLocaleString('en-IN')} each</p>
-                        </div>
+                {(orderData.items || []).map((item) => {
+                  const img = item.product?.image || item.product?.images?.[0];
+                  const price = typeof item.product?.price === 'number' ? item.product.price : Number(item.product?.price || 0);
+                  return (
+                    <div key={item.productId} className="order-product">
+                      <img src={img ? resolveImageUrl(img) : ''} alt={item.product?.name} />
+                      <div>
+                        <h3>{item.product?.name}</h3>
+                        <p>Quantity: {item.quantity}</p>
+                        <p>Price: ₹{price.toLocaleString('en-IN')} each</p>
                       </div>
-                    );
-                  })
-                ) : (
-                  <div className="order-product">
-                    <img src={orderData.product?.image ? resolveImageUrl(orderData.product.image) : ''} alt={orderData.product?.name} />
-                    <div>
-                      <h3>{orderData.product?.name}</h3>
-                      <p>Quantity: {orderData.quantity}</p>
-                      <p>Price: ₹{orderData.product?.price?.toLocaleString('en-IN')}</p>
                     </div>
-                  </div>
-                )}
+                  );
+                })}
               </div>
             </ScrollReveal>
 
@@ -123,8 +112,17 @@ const OrderConfirmation = () => {
             <ScrollReveal delay={0.25}>
               <div className="detail-section">
                 <h3>Order Status</h3>
-                <p className="status-success">✓ Payment Completed</p>
-                <p className="status-info">Your order will be shipped within 2-3 business days.</p>
+                {orderData.paymentStatus === 'PAID' ? (
+                  <>
+                    <p className="status-success">✓ Payment Completed</p>
+                    <p className="status-info">Your order will be shipped within 2-3 business days.</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="status-success">✓ Order Placed</p>
+                    <p className="status-info">Pay on delivery. Your order will be shipped within 2-3 business days.</p>
+                  </>
+                )}
               </div>
             </ScrollReveal>
           </div>

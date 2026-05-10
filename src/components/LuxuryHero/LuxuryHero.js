@@ -11,6 +11,7 @@ import './LuxuryHero.css';
 const LuxuryHero = ({
   image,
   isHome = false,
+  title,
 }) => {
   const navigate = useNavigate();
 
@@ -26,6 +27,12 @@ const LuxuryHero = ({
         )}
         <div className="hero-bg-overlay" />
       </div>
+
+      {!isHome && title && (
+        <div className="hero-category-label">
+          <h1 className="hero-category-name">{title}</h1>
+        </div>
+      )}
 
       {isHome ? (
         <>
@@ -77,7 +84,7 @@ const LuxuryHero = ({
 
             <div className="hero-bottom-right">
               <button className="hero-btn-outline" type="button" onClick={() => navigate('/c')}>
-                Rave design 2026
+                Latest Arrivals
               </button>
               <button className="hero-btn-filled" type="button" onClick={() => navigate('/c')}>
                 Discover the Collection

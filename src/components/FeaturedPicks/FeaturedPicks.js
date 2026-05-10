@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '../ProductCard/ProductCard';
 import ProductDetail from '../ProductDetail/ProductDetail';
-import CheckoutModal from '../CheckoutModal/CheckoutModal';
 import ScrollReveal from '../ScrollReveal/ScrollReveal';
 import { StaggerGrid, StaggerItem } from '../ScrollReveal/StaggerGrid';
 import './FeaturedPicks.css';
@@ -17,8 +16,6 @@ const FeaturedPicks = ({
 }) => {
   const { storeSlug } = useStore();
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [checkoutData, setCheckoutData] = useState(null);
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
@@ -73,26 +70,11 @@ const FeaturedPicks = ({
       </section>
 
       {!onProductClick && (
-        <>
-          <ProductDetail
-            product={selectedProduct}
-            isOpen={!!selectedProduct}
-            onClose={() => setSelectedProduct(null)}
-            onBuyNow={(product, quantity, color) => {
-              setSelectedProduct(null);
-              setCheckoutData({ product, quantity, color });
-              setIsCheckoutOpen(true);
-            }}
-          />
-
-          <CheckoutModal
-            isOpen={isCheckoutOpen}
-            onClose={() => setIsCheckoutOpen(false)}
-            product={checkoutData?.product}
-            quantity={checkoutData?.quantity}
-            selectedColor={checkoutData?.color}
-          />
-        </>
+        <ProductDetail
+          product={selectedProduct}
+          isOpen={!!selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+        />
       )}
     </>
   );

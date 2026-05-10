@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { resolveImageUrl, getProductPrimaryImageSource } from '../../lib/imageUtils';
+import { resolveImageUrl, getProductPrimaryImageSource, PLACEHOLDER_PATH } from '../../lib/imageUtils';
 import './ProductCard.css';
-
-const FALLBACK_IMAGE =
-  'https://via.placeholder.com/400x400.png?text=RUVALI+Product';
 
 const ProductCard = ({ product, onProductClick }) => {
   const [isFavorite, setIsFavorite] = useState(false);
@@ -25,11 +22,7 @@ const ProductCard = ({ product, onProductClick }) => {
   };
 
   const rawImage = getProductPrimaryImageSource(product);
-  const imageUrl = rawImage
-    ? resolveImageUrl(rawImage)
-    : `https://api.lorem.space/image/fashion?w=400&h=400&hash=${product.id}${(product.name || '')
-        .replace(/\s/g, '')
-        .substring(0, 10)}` || FALLBACK_IMAGE;
+  const imageUrl = rawImage ? resolveImageUrl(rawImage) : PLACEHOLDER_PATH;
 
   const categoryLabel =
     typeof product.category === 'string'

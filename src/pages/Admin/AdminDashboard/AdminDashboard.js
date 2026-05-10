@@ -119,7 +119,7 @@ const AdminDashboard = () => {
             {[
               { label: 'Add New Product', path: '/admin/products/new' },
               { label: 'View Orders', path: '/admin/orders' },
-              { label: 'Update Theme Colors', path: '/admin/settings' },
+              { label: 'Store Settings', path: '/admin/settings' },
               { label: 'Manage Categories', path: '/admin/categories' },
             ].map((action, i) => (
               <motion.button

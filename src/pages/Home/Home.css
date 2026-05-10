@@ -1,5 +1,12 @@
 .home {
   width: 100%;
+  background-color: #ffffff;
+}
+
+/* Content below the hero always white regardless of store theme */
+.luxury-content-spacer {
+  background-color: #ffffff;
+  color: #111111;
 }
 
 /* ============================================
@@ -211,6 +218,44 @@
   .hero-content {
     padding: 0 24px;
   }
+
+  .hero-bottom-right {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    gap: 12px;
+  }
+
+  .hero-btn-outline,
+  .hero-btn-filled {
+    max-width: 100%;
+    width: fit-content;
+    padding: 12px 20px;
+  }
+}
+
+/* Category hero title (non-home pages using LuxuryHero) */
+.hero-category-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hero-category-name {
+  font-family: 'Didot', 'Times New Roman', serif;
+  font-size: clamp(36px, 7vw, 96px);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.45);
+  text-align: center;
+  margin: 0;
+  padding: 0 40px;
 }
 
 .curated-section {
@@ -224,7 +269,7 @@
   font-family: 'Didot', serif;
   font-size: 48px;
   font-weight: 700;
-  color: var(--text);
+  color: #111111;
   margin-bottom: 20px;
   letter-spacing: 3px;
   text-transform: uppercase;

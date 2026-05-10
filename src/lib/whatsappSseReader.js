@@ -3,9 +3,6 @@
  */
 
 function dispatchPayload(eventName, obj, callbacks) {
-  if (eventName === 'qr' && obj.qr) {
-    callbacks.onQr?.(obj.qr);
-  }
   if (obj.qr && (eventName === 'qr' || obj.type === 'qr')) {
     callbacks.onQr?.(obj.qr);
   }

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Modal, Button, InputNumber } from 'antd';
 import { useCart } from '../../context/CartContext';
-import { resolveImageUrl, getProductPrimaryImageSource } from '../../lib/imageUtils';
+import { resolveImageUrl, getProductPrimaryImageSource, PLACEHOLDER_PATH } from '../../lib/imageUtils';
 import { toast } from '../../lib/toast';
 import './ProductDetail.css';
 
-const ProductDetail = ({ product, isOpen, onClose, onBuyNow }) => {
+const ProductDetail = ({ product, isOpen, onClose }) => {
   const { addToCart } = useCart();
   const [selectedColor, setSelectedColor] = useState(product?.colors?.[0] || '#000000');
   const [quantity, setQuantity] = useState(1);
@@ -18,18 +18,8 @@ const ProductDetail = ({ product, isOpen, onClose, onBuyNow }) => {
     onClose();
   };
 
-  const handleBuyNow = () => {
-    onBuyNow(product, quantity, selectedColor);
-  };
-
-  const handleQuantityChange = (delta) => {
-    setQuantity((prev) => Math.max(1, prev + delta));
-  };
-
   const rawImage = getProductPrimaryImageSource(product);
-  const imageUrl = rawImage
-    ? resolveImageUrl(rawImage)
-    : `https://api.lorem.space/image/fashion?w=600&h=600&hash=${product.id}`;
+  const imageUrl = rawImage ? resolveImageUrl(rawImage) : PLACEHOLDER_PATH;
 
   const categoryLabel =
     typeof product.category === 'string'
@@ -111,9 +101,6 @@ const ProductDetail = ({ product, isOpen, onClose, onBuyNow }) => {
             <div className="product-detail-actions">
               <Button type="primary" size="large" block className="btn-add-to-cart" onClick={handleAddToCart} disabled={isOutOfStock}>
                 Add to Cart
-              </Button>
-              <Button size="large" block className="btn-buy-now" onClick={handleBuyNow} disabled={isOutOfStock}>
-                Buy Now
               </Button>
             </div>
           </div>

@@ -5,7 +5,7 @@ import { Button, Select, Modal } from 'antd';
 import { toast } from '../../../lib/toast';
 import { useAdminProducts } from '../../../hooks/useAdminProducts';
 import { useAdminCategories } from '../../../hooks/useAdminCategories';
-import { resolveImageUrl, getProductPrimaryImageSource } from '../../../lib/imageUtils';
+import { resolveImageUrl, getProductPrimaryImageSource, PLACEHOLDER_PATH } from '../../../lib/imageUtils';
 import ProductCardSkeleton from '../../../components/ProductCardSkeleton/ProductCardSkeleton';
 import './AdminProducts.css';
 
@@ -82,7 +82,7 @@ const AdminProducts = () => {
                 src={
                   thumbSrc
                     ? resolveImageUrl(thumbSrc)
-                    : 'https://via.placeholder.com/400x400?text=No+Image'
+                    : PLACEHOLDER_PATH
                 }
                 alt={product.name}
               />

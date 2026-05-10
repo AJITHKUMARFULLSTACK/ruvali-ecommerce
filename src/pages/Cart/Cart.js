@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from 'antd';
 import { useCart } from '../../context/CartContext';
 import { toast } from '../../lib/toast';
-import { resolveImageUrl, getProductPrimaryImageSource } from '../../lib/imageUtils';
+import { resolveImageUrl, getProductPrimaryImageSource, PLACEHOLDER_PATH } from '../../lib/imageUtils';
 import { TOP_NAV_HEIGHT } from '../../components/TopNav/TopNav';
 import ScrollReveal from '../../components/ScrollReveal/ScrollReveal';
 import './Cart.css';
@@ -71,7 +71,7 @@ const Cart = () => {
               {cartItems.map((item, index) => {
                 const imgUrl = rawImage(item)
                   ? resolveImageUrl(rawImage(item))
-                  : `https://api.lorem.space/image/fashion?w=200&h=200&hash=${item.id}`;
+                  : PLACEHOLDER_PATH;
                 return (
                   <ScrollReveal key={item.id} delay={index * 0.05}>
                     <motion.div

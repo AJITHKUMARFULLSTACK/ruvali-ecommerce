@@ -79,7 +79,7 @@ const Footer = () => {
       <div className="footer-bottom">
         <div className="footer-logo-container">
           <img src={logoUrl} alt="RUVALI" className="footer-logo" />
-          <p>&copy; 2024 RUVALI. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} RUVALI. All rights reserved.</p>
         </div>
         <p className="footer-tagline">Where Elegance Meets Artistry</p>
       </div>
