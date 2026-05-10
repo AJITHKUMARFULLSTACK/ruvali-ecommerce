@@ -66,12 +66,6 @@ export function invalidateAdminSessionAndRedirect() {
   }
 }
 
-function logAdminTokenForDebug(pathForLog, token) {
-  if (!token || typeof pathForLog !== 'string') return;
-  if (!pathForLog.startsWith('/api/admin/whatsapp')) return;
-  // eslint-disable-next-line no-console -- requested for WhatsApp auth debugging
-  console.log('AUTH TOKEN:', token);
-}
 
 /**
  * Paths that must never attach admin JWT (public + customer-auth routes).
@@ -137,7 +131,6 @@ export function buildApiHeaders(path, methodOrHeaders = {}, maybeHeaders = undef
   if (attach && !headers.Authorization && !headers.authorization) {
     const token = getAdminToken();
     if (token) {
-      logAdminTokenForDebug(pathForJwt, token);
       headers.Authorization = `Bearer ${token}`;
     }
   }
@@ -269,7 +262,6 @@ export async function fetchApi(pathWithQuery, init = {}) {
     t &&
     !(merged.Authorization || merged.authorization)
   ) {
-    logAdminTokenForDebug(pathOnly, t);
     finalHeaders = { ...merged, Authorization: `Bearer ${t}` };
   }
 

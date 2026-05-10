@@ -1,29 +1,38 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Input, Button, Alert } from 'antd';
+import { Input, Button } from 'antd';
 import { QRCodeSVG as QRCode } from 'qrcode.react';
 import { apiGet, apiPut, apiPost, fetchApi, getAdminToken } from '../../../lib/apiClient';
-import { consumeWhatsAppSse, backoffBeforeRetry } from '../../../lib/whatsappSseReader';
+import { consumeWhatsAppSse } from '../../../lib/whatsappSseReader';
 import { uploadStoreBrandingImage } from '../../../lib/backendUploads';
 import { toast } from '../../../lib/toast';
 import { resolveImageUrl } from '../../../lib/imageUtils';
 import './AdminSettings.css';
+
+// WhatsApp UI state machine:
+// 'idle'         — enabled, not connected, ready for manual connect
+// 'loading'      — init called, waiting for QR
+// 'qr'           — QR received, waiting for scan
+// 'connected'    — WhatsApp authenticated
+// 'reconnecting' — was connected, lost connection
+// 'error'        — init or stream failed
+// (disabled state is handled inline via waEnabled flag)
 
 const AdminSettings = () => {
   const queryClient = useQueryClient();
   const [store, setStore] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [waStatus, setWaStatus] = useState(null);
+
+  const [waEnabled, setWaEnabled] = useState(false);
+  const [waUiState, setWaUiState] = useState('idle');
   const [waQr, setWaQr] = useState(null);
-  const [waConnected, setWaConnected] = useState(false);
-  const [waStreamError, setWaStreamError] = useState(null);
-  const [waInitMessage, setWaInitMessage] = useState(null);
-  const [waInitBusy, setWaInitBusy] = useState(false);
-  const [waStreamHint, setWaStreamHint] = useState('');
-  const qrStreamAbortRef = useRef(null);
-  const waOpsRef = useRef({});
+  const [waError, setWaError] = useState(null);
+  const [qrCountdown, setQrCountdown] = useState(60);
+
+  const streamAbortRef = useRef(null);
+  const initRunningRef = useRef(false);
 
   const adminStore = (() => {
     try {
@@ -54,123 +63,105 @@ const AdminSettings = () => {
     setLoading(!slug || isLoading);
   }, [storeData, slug, isLoading]);
 
-  waOpsRef.current.stopStream = () => {
-    qrStreamAbortRef.current?.();
-    qrStreamAbortRef.current = null;
-  };
+  const stopStream = useCallback(() => {
+    streamAbortRef.current?.();
+    streamAbortRef.current = null;
+  }, []);
 
-  waOpsRef.current.subscribeStream = async () => {
-    waOpsRef.current.stopStream();
-    setWaStreamError(null);
+  const openStream = useCallback(async () => {
+    const token = getAdminToken();
+    if (!token) return;
 
-    const tokenPresent = Boolean(getAdminToken());
-    // eslint-disable-next-line no-console
-    console.log('[WhatsApp][FE] token present:', tokenPresent);
-    if (!tokenPresent) return;
+    stopStream();
 
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      if (attempt > 0) {
-        setWaStreamHint(`Reconnecting... (${attempt + 1}/3)`);
-        await backoffBeforeRetry(attempt - 1);
-      }
-
-      const controller = new AbortController();
-      const token = getAdminToken();
-      let res;
-      try {
-        res = await fetchApi('/api/admin/whatsapp/qr-stream', {
-          signal: controller.signal,
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('[WhatsApp][FE] stream fetch error', e.message);
-        continue;
-      }
-
-      if (res.status === 401) return;
-      if (!res.ok) continue;
-
-      const reader = res.body?.getReader?.();
-      if (!reader) continue;
-
-      qrStreamAbortRef.current = () => {
-        try {
-          controller.abort();
-        } catch {
-          /* ignore */
-        }
-        try {
-          reader.cancel();
-        } catch {
-          /* ignore */
-        }
-      };
-
-      let streamEnded = false;
-      try {
-        await consumeWhatsAppSse(reader, controller.signal, {
-          onQr: (qr) => {
-            // eslint-disable-next-line no-console
-            console.log('[WhatsApp][FE] stream qr');
-            setWaQr(qr);
-            setWaStreamHint('');
-          },
-          onStatus: (status) => {
-            // eslint-disable-next-line no-console
-            console.log('[WhatsApp][FE] stream status', status);
-            if (status === 'connected') {
-              setWaConnected(true);
-              setWaQr(null);
-              setWaInitMessage(null);
-              setWaStreamHint('');
-              waOpsRef.current.stopStream();
-            }
-            if (status === 'disconnected') {
-              setWaConnected(false);
-              setWaStreamHint('Reconnecting...');
-            }
-            if (status === 'qr_expired') {
-              setWaStreamHint('QR expired — refreshing session...');
-              setTimeout(async () => {
-                try {
-                  await apiPost('/api/admin/whatsapp/init', {});
-                } catch (err) {
-                  toast.error(err.message || 'Could not refresh QR');
-                }
-              }, 650);
-            }
-          },
-          onError: (msg) => toast.error(msg),
-          onStreamEnd: () => {
-            streamEnded = true;
-          },
-        });
-      } catch (e) {
-        streamEnded = true;
-        // eslint-disable-next-line no-console
-        console.error('[WhatsApp][FE] SSE read ended', e?.message || e);
-      }
-
-      if (streamEnded && !controller.signal.aborted) {
-        setWaStreamHint('Server restarted, reconnecting WhatsApp...');
-        try {
-          await apiPost('/api/admin/whatsapp/init', {});
-        } catch {
-          /* ignore */
-        }
-      }
-
+    const controller = new AbortController();
+    let res;
+    try {
+      res = await fetchApi('/api/admin/whatsapp/qr-stream', {
+        signal: controller.signal,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch {
       return;
     }
 
-    setWaStreamError('Could not open WhatsApp stream after retries.');
-  };
+    if (!res.ok || res.status === 401) return;
 
-  /* WhatsApp: status + SSE (retries / reconnect hints) */
+    const reader = res.body?.getReader?.();
+    if (!reader) return;
+
+    streamAbortRef.current = () => {
+      try { controller.abort(); } catch { /* ignore */ }
+      try { reader.cancel(); } catch { /* ignore */ }
+    };
+
+    let explicitlyStopped = false;
+    try {
+      await consumeWhatsAppSse(reader, controller.signal, {
+        onQr: (qr) => {
+          setWaQr(qr);
+          setWaUiState('qr');
+          setQrCountdown(60);
+        },
+        onStatus: (status) => {
+          if (status === 'connected') {
+            setWaUiState('connected');
+            setWaQr(null);
+            explicitlyStopped = true;
+            stopStream();
+          }
+          if (status === 'disconnected') {
+            setWaUiState('reconnecting');
+          }
+          if (status === 'qr_expired') {
+            setWaQr(null);
+            setWaUiState('loading');
+          }
+        },
+        onError: (msg) => {
+          setWaError(msg || 'An error occurred');
+          setWaUiState('error');
+          explicitlyStopped = true;
+        },
+      });
+    } catch {
+      /* stream closed */
+    }
+
+    if (!controller.signal.aborted && !explicitlyStopped) {
+      setWaError('WhatsApp stream disconnected unexpectedly. Click "Try Again" to reconnect.');
+      setWaUiState('error');
+    }
+  }, [stopStream]);
+
+  const doInitAndStream = useCallback(async () => {
+    if (initRunningRef.current) return;
+    initRunningRef.current = true;
+
+    if (!getAdminToken()) {
+      initRunningRef.current = false;
+      return;
+    }
+
+    setWaError(null);
+    setWaQr(null);
+    setWaUiState('loading');
+
+    try {
+      await apiPost('/api/admin/whatsapp/init', {});
+    } catch (err) {
+      setWaError(err.message || 'Could not initialize WhatsApp. Please try again.');
+      setWaUiState('error');
+      initRunningRef.current = false;
+      return;
+    }
+
+    initRunningRef.current = false;
+    await openStream();
+  }, [openStream]);
+
   useEffect(() => {
-    const token = getAdminToken();
-    if (!token) return undefined;
+    if (!getAdminToken()) return undefined;
 
     let cancelled = false;
 
@@ -178,59 +169,52 @@ const AdminSettings = () => {
       try {
         const data = await apiGet('/api/admin/whatsapp/status');
         if (cancelled) return;
-        setWaStatus(data);
-        setWaConnected(data.ready);
 
-        if (!data.enabled || data.ready) return;
+        setWaEnabled(data.enabled);
 
-        if (!data.hasQr && !data.initializing) {
-          setWaInitBusy(true);
-          try {
-            await apiPost('/api/admin/whatsapp/init', {});
-          } catch (e) {
-            toast.error(e.message || 'WhatsApp init failed');
-          } finally {
-            setWaInitBusy(false);
-          }
+        if (!data.enabled) return;
+
+        if (data.ready) {
+          setWaUiState('connected');
+          return;
         }
 
-        await waOpsRef.current.subscribeStream();
-      } catch (err) {
+        if (data.initializing || data.hasQr) {
+          await openStream();
+        } else {
+          await doInitAndStream();
+        }
+      } catch {
         if (!cancelled) {
-          // eslint-disable-next-line no-console
-          console.error('[WhatsApp][FE] bootstrap error:', err?.message || err);
-          setWaStreamError('Could not load WhatsApp status.');
+          setWaError('Could not load WhatsApp status.');
+          setWaUiState('error');
         }
       }
     })();
 
     return () => {
       cancelled = true;
-      waOpsRef.current.stopStream();
+      stopStream();
     };
-  }, []);
+  }, [doInitAndStream, openStream, stopStream]);
 
-  const handleInitWhatsApp = async () => {
-    const token = getAdminToken();
-    if (!token) return;
-    if (waInitBusy || waStatus?.initializing) return;
+  // QR countdown timer
+  useEffect(() => {
+    if (waUiState !== 'qr' || qrCountdown <= 0) return undefined;
+    const t = setTimeout(() => setQrCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [waUiState, qrCountdown]);
 
-    setWaStreamError(null);
-    setWaInitMessage('Initializing...');
+  const handleConnectClick = () => doInitAndStream();
+
+  const handleRefreshQr = () => doInitAndStream();
+
+  const handleCancel = () => {
+    stopStream();
+    initRunningRef.current = false;
+    setWaUiState('idle');
     setWaQr(null);
-    setWaInitBusy(true);
-
-    try {
-      await apiPost('/api/admin/whatsapp/init', {});
-    } catch (err) {
-      toast.error(err.message || 'Initialization failed');
-      setWaInitMessage(null);
-      return;
-    } finally {
-      setWaInitBusy(false);
-    }
-
-    await waOpsRef.current.subscribeStream();
+    setWaError(null);
   };
 
   const updateMutation = useMutation({
@@ -247,7 +231,6 @@ const AdminSettings = () => {
   const handleUpload = async (e, field) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     try {
       const data = await uploadStoreBrandingImage(file);
       const url =
@@ -256,7 +239,6 @@ const AdminSettings = () => {
           : data.imageUrl || data.fullImageUrl || '';
       if (url) setStore((s) => ({ ...s, [field]: url }));
     } catch (err) {
-      console.error('Upload failed:', err);
       toast.error(err.message || 'Upload failed');
     }
   };
@@ -282,6 +264,123 @@ const AdminSettings = () => {
   if (loading || !store) {
     return <div className="admin-settings-loading">Loading...</div>;
   }
+
+  const renderWhatsApp = () => {
+    if (!waEnabled) {
+      return (
+        <div className="wa-state wa-state--disabled">
+          <p>WhatsApp notifications are disabled.</p>
+          <p className="wa-hint">
+            Set <code>WHATSAPP_ENABLED=true</code> in your server environment and restart to enable.
+          </p>
+        </div>
+      );
+    }
+
+    if (waUiState === 'idle') {
+      return (
+        <div className="wa-state wa-state--idle">
+          <div className="wa-status-row">
+            <span className="wa-dot wa-dot--off" />
+            <span className="wa-status-label">WhatsApp Not Connected</span>
+          </div>
+          <ul className="wa-checklist">
+            <li>You haven't linked your WhatsApp account yet.</li>
+            <li>Order notifications will not be sent until connected.</li>
+          </ul>
+          <Button type="primary" danger size="large" onClick={handleConnectClick} className="wa-main-btn">
+            Connect WhatsApp
+          </Button>
+        </div>
+      );
+    }
+
+    if (waUiState === 'loading') {
+      return (
+        <div className="wa-state wa-state--loading">
+          <div className="wa-spinner" />
+          <p className="wa-loading-text">Setting up WhatsApp...</p>
+          <p className="wa-hint">This usually takes 10–20 seconds.</p>
+          <Button size="small" onClick={handleCancel} className="wa-cancel-btn">
+            Cancel
+          </Button>
+        </div>
+      );
+    }
+
+    if (waUiState === 'qr') {
+      return (
+        <div className="wa-state wa-state--qr">
+          <div className="wa-qr-wrap">
+            {qrCountdown > 0 ? (
+              <QRCode value={waQr} size={250} />
+            ) : (
+              <div className="wa-qr-expired">QR Expired</div>
+            )}
+          </div>
+          <h3 className="wa-qr-title">Scan with WhatsApp to connect</h3>
+          <ol className="wa-qr-steps">
+            <li>Open WhatsApp on your phone</li>
+            <li>Tap <strong>Menu (...)</strong> &rarr; <strong>Linked Devices</strong></li>
+            <li>Tap <strong>Link a Device</strong></li>
+            <li>Point your camera at this QR code</li>
+          </ol>
+          {qrCountdown > 0 ? (
+            <p className="wa-countdown">QR expires in: <strong>{qrCountdown}s</strong></p>
+          ) : (
+            <p className="wa-countdown wa-countdown--expired">QR code expired</p>
+          )}
+          <Button size="small" onClick={handleRefreshQr} className="wa-refresh-btn">
+            Refresh QR
+          </Button>
+        </div>
+      );
+    }
+
+    if (waUiState === 'connected') {
+      return (
+        <div className="wa-state wa-state--connected">
+          <div className="wa-connected-banner">
+            <span className="wa-dot wa-dot--on" />
+            <span className="wa-status-label">WhatsApp Connected</span>
+          </div>
+          <p className="wa-hint">Order notifications are active and will be sent automatically.</p>
+          <Button size="small" onClick={handleConnectClick} className="wa-cancel-btn">
+            Re-connect
+          </Button>
+        </div>
+      );
+    }
+
+    if (waUiState === 'reconnecting') {
+      return (
+        <div className="wa-state wa-state--reconnecting">
+          <div className="wa-spinner wa-spinner--orange" />
+          <p className="wa-loading-text">Reconnecting to WhatsApp...</p>
+          <p className="wa-hint">If this takes more than 30 seconds, cancel and try again.</p>
+          <Button size="small" onClick={handleCancel} className="wa-cancel-btn">
+            Cancel
+          </Button>
+        </div>
+      );
+    }
+
+    if (waUiState === 'error') {
+      return (
+        <div className="wa-state wa-state--error">
+          <div className="wa-error-icon">&#x274C;</div>
+          <p className="wa-error-title">Connection Failed</p>
+          {waError && <p className="wa-error-msg">{waError}</p>}
+          <p className="wa-hint">Click "Try Again" to restart the connection process.</p>
+          <Button type="primary" danger onClick={handleConnectClick} className="wa-main-btn">
+            Try Again
+          </Button>
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div className="admin-settings">
@@ -352,13 +451,16 @@ const AdminSettings = () => {
         <section className="settings-block">
           <h2>Contact</h2>
           <div className="form-group">
-            <label>WhatsApp Number</label>
+            <label>Your WhatsApp Business Number</label>
+            <p className="settings-field-hint">
+              The number customers receive order notifications from. Include country code with no spaces or symbols (e.g. <code>919876543210</code> for India).
+            </p>
             <Input
               value={store.whatsappNumber}
               onChange={(e) =>
                 setStore((s) => ({ ...s, whatsappNumber: e.target.value }))
               }
-              placeholder="+919876543210"
+              placeholder="919XXXXXXXXXX"
               size="large"
             />
           </div>
@@ -366,56 +468,7 @@ const AdminSettings = () => {
 
         <section className="settings-block">
           <h2>WhatsApp</h2>
-          {!waStatus?.enabled && (
-            <div style={{ color: '#888' }}>
-              WhatsApp notifications are disabled.
-              Set WHATSAPP_ENABLED=true in your server environment and restart to enable.
-            </div>
-          )}
-          {waStreamHint ? (
-            <Alert type="info" message={waStreamHint} showIcon style={{ marginTop: 12 }} />
-          ) : null}
-          {waStreamError && (
-            <Alert type="error" message={waStreamError} showIcon style={{ marginTop: 12 }} />
-          )}
-          {waStatus?.enabled && (waConnected || waStatus?.ready) && (
-            <div style={{ color: 'green', fontWeight: 500 }}>
-              WhatsApp connected. Messages will be sent automatically.
-            </div>
-          )}
-          {waStatus?.enabled && !waConnected && !waStatus?.ready && (
-            <div style={{ marginTop: 12 }}>
-              <Button
-                onClick={handleInitWhatsApp}
-                type="primary"
-                disabled={waInitBusy || !!waStatus?.initializing}
-                loading={waInitBusy}
-              >
-                Initialize WhatsApp
-              </Button>
-              {waInitMessage && (
-                <div style={{ color: '#888', marginTop: 8 }}>
-                  {waInitMessage}
-                </div>
-              )}
-            </div>
-          )}
-          {waStatus?.enabled && !waConnected && !waStatus?.ready && waQr && (
-            <div>
-              <Alert type="warning" message="WhatsApp not connected — scan the QR code below with your WhatsApp" showIcon />
-              <div style={{ marginTop: 16, display: 'inline-block', padding: 16, background: 'white', borderRadius: 8 }}>
-                <QRCode value={waQr} size={200} />
-              </div>
-              <p style={{ color: '#888', marginTop: 8, fontSize: 13 }}>
-                Open WhatsApp on your phone → tap Menu → Linked Devices → Link a Device → scan this code
-              </p>
-            </div>
-          )}
-          {waStatus?.enabled && !waConnected && !waStatus?.ready && !waQr && (
-            <div style={{ color: '#888' }}>
-              Connecting to WhatsApp...
-            </div>
-          )}
+          {renderWhatsApp()}
         </section>
 
         <Button type="primary" size="large" onClick={handleSave} loading={saving}>

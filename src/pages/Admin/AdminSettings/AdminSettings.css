@@ -185,3 +185,210 @@
   font-size: 18px;
   padding: 40px;
 }
+
+/* ── WhatsApp state machine UI ── */
+
+.wa-state {
+  padding: 20px 0;
+}
+
+.wa-hint {
+  color: #888;
+  font-size: 13px;
+  margin: 8px 0 16px;
+  line-height: 1.5;
+}
+
+.wa-hint code {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.wa-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.wa-status-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.wa-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.wa-dot--on {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+.wa-dot--off {
+  background: #9ca3af;
+}
+
+/* idle state */
+.wa-checklist {
+  list-style: disc;
+  padding-left: 20px;
+  color: #555;
+  font-size: 14px;
+  margin-bottom: 20px;
+  line-height: 1.8;
+}
+
+.wa-main-btn {
+  min-width: 180px;
+}
+
+/* loading / reconnecting */
+.wa-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #CC0000;
+  border-radius: 50%;
+  animation: wa-spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+.wa-spinner--orange {
+  border-top-color: #f97316;
+}
+
+@keyframes wa-spin {
+  to { transform: rotate(360deg); }
+}
+
+.wa-loading-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.wa-cancel-btn {
+  margin-top: 12px;
+}
+
+/* qr state */
+.wa-state--qr {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.wa-qr-wrap {
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.wa-qr-expired {
+  width: 250px;
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  color: #888;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 4px;
+}
+
+.wa-qr-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+
+.wa-qr-steps {
+  padding-left: 20px;
+  color: #444;
+  font-size: 14px;
+  line-height: 2;
+  margin-bottom: 16px;
+}
+
+.wa-countdown {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.wa-countdown--expired {
+  color: #CC0000;
+  font-weight: 600;
+}
+
+.wa-refresh-btn {
+  margin-top: 4px;
+}
+
+/* connected state */
+.wa-connected-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+
+.wa-connected-banner .wa-status-label {
+  color: #15803d;
+}
+
+/* error state */
+.wa-error-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.wa-error-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #CC0000;
+  margin-bottom: 6px;
+}
+
+.wa-error-msg {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 8px;
+  max-width: 480px;
+  line-height: 1.5;
+}
+
+/* field hint below label */
+.settings-field-hint {
+  font-size: 12px;
+  color: #888;
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+.settings-field-hint code {
+  background: #f0f0f0;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 11px;
+}

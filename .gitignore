@@ -12,7 +12,7 @@ node_modules/
 /build/
 /dist/
 **/dist/
-coverage/
+/coverage/
 
 # Logs
 *.log
@@ -35,10 +35,3 @@ deployment-secrets.txt
 
 # Local clone of production API (maintain github.com/AJITHKUMARFULLSTACK/ruvali_backend.git as source of truth)
 ruvali-backend/
-
-# Playwright
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-/playwright/.auth/

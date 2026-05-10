@@ -6,7 +6,6 @@ import { useCart } from '../../context/CartContext';
 import { useStore } from '../../context/StoreContext';
 import { resolveImageUrl, getProductPrimaryImageSource, PLACEHOLDER_PATH } from '../../lib/imageUtils';
 import { apiPost } from '../../lib/apiClient';
-import { isTesting } from '../../config';
 import './Payment.css';
 
 const Payment = () => {
@@ -185,15 +184,6 @@ const Payment = () => {
     >
       <div className="payment-container">
         <h1 className="payment-title">Payment</h1>
-
-        {isTesting && (
-          <Alert
-            type="info"
-            message="Test mode — Razorpay test credentials active"
-            showIcon
-            style={{ marginBottom: 24 }}
-          />
-        )}
 
         {orderError && (
           <Alert type="error" message={orderError} showIcon style={{ marginBottom: 24 }} />
